@@ -1,0 +1,1939 @@
+2024-12-21 18:28:19,448 - mmfewshot - INFO - Environment info:
+------------------------------------------------------------
+sys.platform: linux
+Python: 3.7.12 | packaged by conda-forge | (default, Oct 26 2021, 06:08:21) [GCC 9.4.0]
+CUDA available: True
+GPU 0: NVIDIA GeForce RTX 3090
+CUDA_HOME: /usr/local/cuda
+NVCC: Build cuda_11.0_bu.TC445_37.28845127_0
+GCC: gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0
+PyTorch: 1.8.0
+PyTorch compiling details: PyTorch built with:
+  - GCC 7.3
+  - C++ Version: 201402
+  - Intel(R) Math Kernel Library Version 2020.0.2 Product Build 20200624 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v1.7.0 (Git Hash 7aed236906b1f7a05c0917e5257a1af05e9ff683)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.1
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_61,code=sm_61;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_37,code=compute_37
+  - CuDNN 8.0.5
+  - Magma 2.5.2
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.1, CUDNN_VERSION=8.0.5, CXX_COMPILER=/opt/rh/devtoolset-7/root/usr/bin/c++, CXX_FLAGS= -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.8.0, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, 
+
+TorchVision: 0.9.0
+OpenCV: 4.10.0
+MMCV: 1.4.0
+MMCV Compiler: GCC 7.3
+MMCV CUDA Compiler: 11.1
+MMDetection: 2.20.0+af4fad5
+------------------------------------------------------------
+
+2024-12-21 18:28:21,016 - mmfewshot - INFO - Distributed training: True
+2024-12-21 18:28:22,655 - mmfewshot - INFO - Config:
+img_norm_cfg = dict(
+    mean=[103.53, 116.28, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
+train_multi_pipelines = dict(
+    query=[
+        dict(type='LoadImageFromFile'),
+        dict(type='LoadAnnotations', with_bbox=True),
+        dict(type='Resize', img_scale=(1000, 600), keep_ratio=True),
+        dict(type='RandomFlip', flip_ratio=0.5),
+        dict(
+            type='Normalize',
+            mean=[103.53, 116.28, 123.675],
+            std=[1.0, 1.0, 1.0],
+            to_rgb=False),
+        dict(type='DefaultFormatBundle'),
+        dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+    ],
+    support=[
+        dict(type='LoadImageFromFile'),
+        dict(type='LoadAnnotations', with_bbox=True),
+        dict(
+            type='Normalize',
+            mean=[103.53, 116.28, 123.675],
+            std=[1.0, 1.0, 1.0],
+            to_rgb=False),
+        dict(type='GenerateMask', target_size=(224, 224)),
+        dict(type='RandomFlip', flip_ratio=0.0),
+        dict(type='DefaultFormatBundle'),
+        dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+    ])
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(1000, 600),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(
+                type='Normalize',
+                mean=[103.53, 116.28, 123.675],
+                std=[1.0, 1.0, 1.0],
+                to_rgb=False),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ])
+]
+data_root = 'data/VOCdevkit/'
+data = dict(
+    samples_per_gpu=4,
+    workers_per_gpu=2,
+    train=dict(
+        type='NWayKShotDataset',
+        num_support_ways=15,
+        num_support_shots=1,
+        one_support_shot_per_image=True,
+        num_used_support_shots=200,
+        save_dataset=False,
+        dataset=dict(
+            type='FewShotVOCDataset',
+            ann_cfg=[
+                dict(
+                    type='ann_file',
+                    ann_file=
+                    'data/VOCdevkit/VOC2007/ImageSets/Main/trainval.txt'),
+                dict(
+                    type='ann_file',
+                    ann_file=
+                    'data/VOCdevkit/VOC2012/ImageSets/Main/trainval.txt')
+            ],
+            img_prefix='data/VOCdevkit/',
+            multi_pipelines=dict(
+                query=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Resize', img_scale=(1000, 600), keep_ratio=True),
+                    dict(type='RandomFlip', flip_ratio=0.5),
+                    dict(
+                        type='Normalize',
+                        mean=[103.53, 116.28, 123.675],
+                        std=[1.0, 1.0, 1.0],
+                        to_rgb=False),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+                ],
+                support=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Normalize',
+                        mean=[103.53, 116.28, 123.675],
+                        std=[1.0, 1.0, 1.0],
+                        to_rgb=False),
+                    dict(type='GenerateMask', target_size=(224, 224)),
+                    dict(type='RandomFlip', flip_ratio=0.0),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+                ]),
+            classes='BASE_CLASSES_SPLIT1',
+            use_difficult=True,
+            instance_wise=False,
+            dataset_name='query_dataset'),
+        support_dataset=dict(
+            type='FewShotVOCDataset',
+            ann_cfg=[
+                dict(
+                    type='ann_file',
+                    ann_file=
+                    'data/VOCdevkit/VOC2007/ImageSets/Main/trainval.txt'),
+                dict(
+                    type='ann_file',
+                    ann_file=
+                    'data/VOCdevkit/VOC2012/ImageSets/Main/trainval.txt')
+            ],
+            img_prefix='data/VOCdevkit/',
+            multi_pipelines=dict(
+                query=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Resize', img_scale=(1000, 600), keep_ratio=True),
+                    dict(type='RandomFlip', flip_ratio=0.5),
+                    dict(
+                        type='Normalize',
+                        mean=[103.53, 116.28, 123.675],
+                        std=[1.0, 1.0, 1.0],
+                        to_rgb=False),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+                ],
+                support=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Normalize',
+                        mean=[103.53, 116.28, 123.675],
+                        std=[1.0, 1.0, 1.0],
+                        to_rgb=False),
+                    dict(type='GenerateMask', target_size=(224, 224)),
+                    dict(type='RandomFlip', flip_ratio=0.0),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+                ]),
+            classes='BASE_CLASSES_SPLIT1',
+            use_difficult=False,
+            instance_wise=False,
+            dataset_name='support_dataset')),
+    val=dict(
+        type='FewShotVOCDataset',
+        ann_cfg=[
+            dict(
+                type='ann_file',
+                ann_file='data/VOCdevkit/VOC2007/ImageSets/Main/test.txt')
+        ],
+        img_prefix='data/VOCdevkit/',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(1000, 600),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[103.53, 116.28, 123.675],
+                        std=[1.0, 1.0, 1.0],
+                        to_rgb=False),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ],
+        classes='BASE_CLASSES_SPLIT1'),
+    test=dict(
+        type='FewShotVOCDataset',
+        ann_cfg=[
+            dict(
+                type='ann_file',
+                ann_file='data/VOCdevkit/VOC2007/ImageSets/Main/test.txt')
+        ],
+        img_prefix='data/VOCdevkit/',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(1000, 600),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[103.53, 116.28, 123.675],
+                        std=[1.0, 1.0, 1.0],
+                        to_rgb=False),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ],
+        test_mode=True,
+        classes='BASE_CLASSES_SPLIT1'),
+    model_init=dict(
+        copy_from_train_dataset=True,
+        samples_per_gpu=16,
+        workers_per_gpu=1,
+        type='FewShotVOCDataset',
+        ann_cfg=None,
+        img_prefix='data/VOCdevkit/',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadAnnotations', with_bbox=True),
+            dict(
+                type='Normalize',
+                mean=[103.53, 116.28, 123.675],
+                std=[1.0, 1.0, 1.0],
+                to_rgb=False),
+            dict(type='GenerateMask', target_size=(224, 224)),
+            dict(type='RandomFlip', flip_ratio=0.0),
+            dict(type='DefaultFormatBundle'),
+            dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+        ],
+        use_difficult=False,
+        instance_wise=True,
+        classes='BASE_CLASSES_SPLIT1',
+        dataset_name='model_init_dataset'))
+evaluation = dict(interval=6000, metric='mAP')
+optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
+optimizer_config = dict(grad_clip=None)
+lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=100,
+    warmup_ratio=0.001,
+    step=[16000])
+runner = dict(type='IterBasedRunner', max_iters=18000)
+norm_cfg = dict(type='BN', requires_grad=False)
+pretrained = 'open-mmlab://detectron2/resnet101_caffe'
+model = dict(
+    type='MetaRCNN',
+    pretrained='open-mmlab://detectron2/resnet101_caffe',
+    backbone=dict(
+        type='ResNetWithMetaConv',
+        depth=101,
+        num_stages=3,
+        strides=(1, 2, 2),
+        dilations=(1, 1, 1),
+        out_indices=(2, ),
+        frozen_stages=2,
+        norm_cfg=dict(type='BN', requires_grad=False),
+        norm_eval=True,
+        style='caffe'),
+    rpn_head=dict(
+        type='RPNHead',
+        in_channels=1024,
+        feat_channels=512,
+        anchor_generator=dict(
+            type='AnchorGenerator',
+            scales=[2, 4, 8, 16, 32],
+            ratios=[0.5, 1.0, 2.0],
+            scale_major=False,
+            strides=[16]),
+        bbox_coder=dict(
+            type='DeltaXYWHBBoxCoder',
+            target_means=[0.0, 0.0, 0.0, 0.0],
+            target_stds=[1.0, 1.0, 1.0, 1.0]),
+        loss_cls=dict(
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+    roi_head=dict(
+        type='MetaRCNNRoIHead',
+        shared_head=dict(
+            type='MetaRCNNResLayer',
+            pretrained='open-mmlab://detectron2/resnet101_caffe',
+            depth=50,
+            stage=3,
+            stride=2,
+            dilation=1,
+            style='caffe',
+            norm_cfg=dict(type='BN', requires_grad=False),
+            norm_eval=True),
+        bbox_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
+            out_channels=1024,
+            featmap_strides=[16]),
+        bbox_head=dict(
+            type='MetaBBoxHead',
+            with_avg_pool=False,
+            roi_feat_size=1,
+            in_channels=2048,
+            num_classes=15,
+            bbox_coder=dict(
+                type='DeltaXYWHBBoxCoder',
+                target_means=[0.0, 0.0, 0.0, 0.0],
+                target_stds=[0.1, 0.1, 0.2, 0.2]),
+            reg_class_agnostic=False,
+            loss_cls=dict(
+                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+            loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0),
+            num_meta_classes=15,
+            meta_cls_in_channels=2048,
+            with_meta_cls_loss=True,
+            loss_meta=dict(
+                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
+        aggregation_layer=dict(
+            type='AggregationLayer',
+            aggregator_cfgs=[
+                dict(
+                    type='DotProductAggregator',
+                    in_channels=2048,
+                    with_fc=False)
+            ])),
+    train_cfg=dict(
+        rpn=dict(
+            assigner=dict(
+                type='MaxIoUAssigner',
+                pos_iou_thr=0.7,
+                neg_iou_thr=0.3,
+                min_pos_iou=0.3,
+                match_low_quality=True,
+                ignore_iof_thr=-1),
+            sampler=dict(
+                type='RandomSampler',
+                num=256,
+                pos_fraction=0.5,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=False),
+            allowed_border=0,
+            pos_weight=-1,
+            debug=False),
+        rpn_proposal=dict(
+            nms_pre=12000,
+            max_per_img=2000,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
+        rcnn=dict(
+            assigner=dict(
+                type='MaxIoUAssigner',
+                pos_iou_thr=0.5,
+                neg_iou_thr=0.5,
+                min_pos_iou=0.5,
+                match_low_quality=False,
+                ignore_iof_thr=-1),
+            sampler=dict(
+                type='RandomSampler',
+                num=128,
+                pos_fraction=0.25,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=True),
+            pos_weight=-1,
+            debug=False)),
+    test_cfg=dict(
+        rpn=dict(
+            nms_pre=6000,
+            max_per_img=300,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
+        rcnn=dict(
+            score_thr=0.05,
+            nms=dict(type='nms', iou_threshold=0.3),
+            max_per_img=100)))
+checkpoint_config = dict(interval=6000)
+log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
+custom_hooks = [dict(type='NumClassCheckHook')]
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+load_from = None
+resume_from = None
+workflow = [('train', 1)]
+use_infinite_sampler = True
+seed = 42
+work_dir = './work_dirs/meta-rcnn_r101_c4_8xb4_voc-split1_base-training'
+gpu_ids = range(0, 1)
+
+2024-12-21 18:28:22,655 - mmfewshot - INFO - Set random seed to 42, deterministic: False
+2024-12-21 18:28:23,347 - mmfewshot - INFO - initialize ResNetWithMetaConv with init_cfg {'type': 'Pretrained', 'checkpoint': 'open-mmlab://detectron2/resnet101_caffe'}
+2024-12-21 18:28:34,028 - mmfewshot - INFO - initialize RPNHead with init_cfg {'type': 'Normal', 'layer': 'Conv2d', 'std': 0.01}
+2024-12-21 18:28:34,261 - mmfewshot - INFO - initialize MetaRCNNResLayer with init_cfg {'type': 'Pretrained', 'checkpoint': 'open-mmlab://detectron2/resnet101_caffe'}
+2024-12-21 18:28:34,747 - mmfewshot - INFO - initialize MetaBBoxHead with init_cfg [{'type': 'Normal', 'std': 0.01, 'override': {'name': 'fc_cls'}}, {'type': 'Normal', 'std': 0.001, 'override': {'name': 'fc_reg'}}]
+Name of parameter - Initialization information
+
+backbone.conv1.weight - torch.Size([64, 3, 7, 7]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.conv1.weight - torch.Size([64, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.downsample.0.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.downsample.1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.downsample.1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.conv1.weight - torch.Size([64, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.conv1.weight - torch.Size([64, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.conv1.weight - torch.Size([128, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.downsample.0.weight - torch.Size([512, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.downsample.1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.downsample.1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.conv1.weight - torch.Size([256, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.downsample.0.weight - torch.Size([1024, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.downsample.1.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.downsample.1.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.meta_conv.weight - torch.Size([64, 4, 7, 7]): 
+The value is the same before and after calling `init_weights` of MetaRCNN  
+
+rpn_head.rpn_conv.weight - torch.Size([512, 1024, 3, 3]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+rpn_head.rpn_conv.bias - torch.Size([512]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+rpn_head.rpn_cls.weight - torch.Size([30, 512, 1, 1]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+rpn_head.rpn_cls.bias - torch.Size([30]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+rpn_head.rpn_reg.weight - torch.Size([60, 512, 1, 1]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+rpn_head.rpn_reg.bias - torch.Size([60]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+roi_head.shared_head.layer4.0.conv1.weight - torch.Size([512, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.0.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.0.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.0.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.0.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.0.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.0.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.0.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.0.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.0.downsample.0.weight - torch.Size([2048, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.0.downsample.1.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.0.downsample.1.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.1.conv1.weight - torch.Size([512, 2048, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.1.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.1.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.1.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.1.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.1.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.1.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.1.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.1.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.2.conv1.weight - torch.Size([512, 2048, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.2.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.2.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.2.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.2.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.2.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.2.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.2.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.shared_head.layer4.2.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+roi_head.bbox_head.fc_cls.weight - torch.Size([16, 2048]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+roi_head.bbox_head.fc_cls.bias - torch.Size([16]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+roi_head.bbox_head.fc_reg.weight - torch.Size([60, 2048]): 
+NormalInit: mean=0, std=0.001, bias=0 
+
+roi_head.bbox_head.fc_reg.bias - torch.Size([60]): 
+NormalInit: mean=0, std=0.001, bias=0 
+
+roi_head.bbox_head.fc_meta.weight - torch.Size([15, 2048]): 
+The value is the same before and after calling `init_weights` of MetaRCNN  
+
+roi_head.bbox_head.fc_meta.bias - torch.Size([15]): 
+The value is the same before and after calling `init_weights` of MetaRCNN  
+2024-12-21 18:28:40,911 - mmfewshot - INFO - 
+FewShotVOCDataset query_dataset with number of images 14631, and instance counts: 
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+| category      | count | category         | count | category        | count | category   | count | category       | count |
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+| 0 [aeroplane] | 1285  | 1 [bicycle]      | 1208  | 2 [boat]        | 1397  | 3 [bottle] | 2116  | 4 [car]        | 4008  |
+| 5 [cat]       | 1616  | 6 [chair]        | 4338  | 7 [diningtable] | 1057  | 8 [dog]    | 2079  | 9 [horse]      | 1156  |
+| 10 [person]   | 15576 | 11 [pottedplant] | 1724  | 12 [sheep]      | 1347  | 13 [train] | 984   | 14 [tvmonitor] | 1193  |
+| -1 background | 0     |                  |       |                 |       |            |       |                |       |
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+2024-12-21 18:28:46,591 - mmfewshot - INFO - 
+FewShotVOCDataset support_dataset with number of images 14554, and instance counts: 
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+| category      | count | category         | count | category        | count | category   | count | category       | count |
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+| 0 [aeroplane] | 1171  | 1 [bicycle]      | 1064  | 2 [boat]        | 1140  | 3 [bottle] | 1764  | 4 [car]        | 3267  |
+| 5 [cat]       | 1593  | 6 [chair]        | 3152  | 7 [diningtable] | 824   | 8 [dog]    | 2025  | 9 [horse]      | 1072  |
+| 10 [person]   | 13256 | 11 [pottedplant] | 1487  | 12 [sheep]      | 1070  | 13 [train] | 925   | 14 [tvmonitor] | 1108  |
+| -1 background | 0     |                  |       |                 |       |            |       |                |       |
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+2024-12-21 18:29:02,342 - mmfewshot - INFO - 
+FewShotVOCDataset Test dataset with number of images 4952, and instance counts: 
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+| category      | count | category         | count | category        | count | category   | count | category       | count |
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+| 0 [aeroplane] | 285   | 1 [bicycle]      | 337   | 2 [boat]        | 263   | 3 [bottle] | 469   | 4 [car]        | 1201  |
+| 5 [cat]       | 358   | 6 [chair]        | 756   | 7 [diningtable] | 206   | 8 [dog]    | 489   | 9 [horse]      | 348   |
+| 10 [person]   | 4528  | 11 [pottedplant] | 480   | 12 [sheep]      | 242   | 13 [train] | 282   | 14 [tvmonitor] | 308   |
+| -1 background | 571   |                  |       |                 |       |            |       |                |       |
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+2024-12-21 18:29:02,984 - mmfewshot - INFO - 
+FewShotVOCCopyDataset model_init_dataset with number of images 3000, and instance counts: 
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+| category      | count | category         | count | category        | count | category   | count | category       | count |
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+| 0 [aeroplane] | 200   | 1 [bicycle]      | 200   | 2 [boat]        | 200   | 3 [bottle] | 200   | 4 [car]        | 200   |
+| 5 [cat]       | 200   | 6 [chair]        | 200   | 7 [diningtable] | 200   | 8 [dog]    | 200   | 9 [horse]      | 200   |
+| 10 [person]   | 200   | 11 [pottedplant] | 200   | 12 [sheep]      | 200   | 13 [train] | 200   | 14 [tvmonitor] | 200   |
+| -1 background | 0     |                  |       |                 |       |            |       |                |       |
++---------------+-------+------------------+-------+-----------------+-------+------------+-------+----------------+-------+
+2024-12-21 18:29:02,986 - mmfewshot - INFO - Start running, host: root@e85076d870e0, work_dir: /root/mmfewshot/work_dirs/meta-rcnn_r101_c4_8xb4_voc-split1_base-training
+2024-12-21 18:29:02,986 - mmfewshot - INFO - Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) StepLrUpdaterHook                  
+(NORMAL      ) CheckpointHook                     
+(LOW         ) QuerySupportDistEvalHook           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_epoch:
+(VERY_HIGH   ) StepLrUpdaterHook                  
+(NORMAL      ) NumClassCheckHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) QuerySupportDistEvalHook           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_iter:
+(VERY_HIGH   ) StepLrUpdaterHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) QuerySupportDistEvalHook           
+ -------------------- 
+after_train_iter:
+(ABOVE_NORMAL) OptimizerHook                      
+(NORMAL      ) CheckpointHook                     
+(LOW         ) IterTimerHook                      
+(LOW         ) QuerySupportDistEvalHook           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_train_epoch:
+(NORMAL      ) CheckpointHook                     
+(LOW         ) QuerySupportDistEvalHook           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_epoch:
+(NORMAL      ) NumClassCheckHook                  
+(LOW         ) IterTimerHook                      
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_epoch:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_run:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+2024-12-21 18:29:02,987 - mmfewshot - INFO - workflow: [('train', 1)], max: 18000 iters
+2024-12-21 18:29:02,987 - mmfewshot - INFO - Checkpoints will be saved to /root/mmfewshot/work_dirs/meta-rcnn_r101_c4_8xb4_voc-split1_base-training by HardDiskBackend.
+2024-12-21 18:30:23,364 - mmfewshot - INFO - Iter [50/18000]	lr: 2.453e-03, eta: 2:18:39, time: 0.463, data_time: 0.043, memory: 9421, loss_rpn_cls: 0.2920, loss_rpn_bbox: 0.1269, loss_cls: 1.2022, loss_bbox: 0.3508, acc: 74.5742, loss_meta_cls: 0.1829, meta_acc: 6.9333, loss: 2.1548
+2024-12-21 18:30:44,539 - mmfewshot - INFO - Iter [100/18000]	lr: 4.950e-03, eta: 2:12:17, time: 0.423, data_time: 0.034, memory: 9421, loss_rpn_cls: 0.1555, loss_rpn_bbox: 0.1304, loss_cls: 0.6882, loss_bbox: 0.4181, acc: 82.9336, loss_meta_cls: 0.1800, meta_acc: 9.0667, loss: 1.5723
+2024-12-21 18:31:06,152 - mmfewshot - INFO - Iter [150/18000]	lr: 5.000e-03, eta: 2:10:48, time: 0.432, data_time: 0.034, memory: 9421, loss_rpn_cls: 0.1194, loss_rpn_bbox: 0.1176, loss_cls: 0.6087, loss_bbox: 0.4384, acc: 81.8477, loss_meta_cls: 0.1799, meta_acc: 10.5333, loss: 1.4641
+2024-12-21 18:31:27,894 - mmfewshot - INFO - Iter [200/18000]	lr: 5.000e-03, eta: 2:10:04, time: 0.435, data_time: 0.035, memory: 9421, loss_rpn_cls: 0.1238, loss_rpn_bbox: 0.1103, loss_cls: 0.5665, loss_bbox: 0.4224, acc: 83.2227, loss_meta_cls: 0.1803, meta_acc: 6.8000, loss: 1.4033
+2024-12-21 18:31:49,495 - mmfewshot - INFO - Iter [250/18000]	lr: 5.000e-03, eta: 2:09:20, time: 0.432, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.1176, loss_rpn_bbox: 0.0902, loss_cls: 0.5089, loss_bbox: 0.4116, acc: 84.2266, loss_meta_cls: 0.1802, meta_acc: 9.6000, loss: 1.3085
+2024-12-21 18:32:11,429 - mmfewshot - INFO - Iter [300/18000]	lr: 5.000e-03, eta: 2:09:02, time: 0.439, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.1142, loss_rpn_bbox: 0.0873, loss_cls: 0.5541, loss_bbox: 0.4477, acc: 82.1406, loss_meta_cls: 0.1800, meta_acc: 9.3333, loss: 1.3833
+2024-12-21 18:32:33,339 - mmfewshot - INFO - Iter [350/18000]	lr: 5.000e-03, eta: 2:08:42, time: 0.438, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.1108, loss_rpn_bbox: 0.1099, loss_cls: 0.4944, loss_bbox: 0.4122, acc: 84.0039, loss_meta_cls: 0.1796, meta_acc: 11.7333, loss: 1.3069
+2024-12-21 18:32:55,217 - mmfewshot - INFO - Iter [400/18000]	lr: 5.000e-03, eta: 2:08:20, time: 0.438, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.1129, loss_rpn_bbox: 0.0832, loss_cls: 0.4812, loss_bbox: 0.3875, acc: 84.2461, loss_meta_cls: 0.1791, meta_acc: 13.2000, loss: 1.2438
+2024-12-21 18:33:16,997 - mmfewshot - INFO - Iter [450/18000]	lr: 5.000e-03, eta: 2:07:54, time: 0.435, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.1014, loss_rpn_bbox: 0.0838, loss_cls: 0.4613, loss_bbox: 0.3961, acc: 85.2031, loss_meta_cls: 0.1786, meta_acc: 14.2667, loss: 1.2211
+2024-12-21 18:33:38,736 - mmfewshot - INFO - Iter [500/18000]	lr: 5.000e-03, eta: 2:07:28, time: 0.435, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.1085, loss_rpn_bbox: 0.0864, loss_cls: 0.4531, loss_bbox: 0.3690, acc: 85.3438, loss_meta_cls: 0.1781, meta_acc: 14.2667, loss: 1.1951
+2024-12-21 18:34:00,475 - mmfewshot - INFO - Iter [550/18000]	lr: 5.000e-03, eta: 2:07:03, time: 0.435, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0961, loss_rpn_bbox: 0.0814, loss_cls: 0.4567, loss_bbox: 0.3919, acc: 85.0781, loss_meta_cls: 0.1774, meta_acc: 12.5333, loss: 1.2036
+2024-12-21 18:34:22,347 - mmfewshot - INFO - Iter [600/18000]	lr: 5.000e-03, eta: 2:06:41, time: 0.437, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0943, loss_rpn_bbox: 0.0787, loss_cls: 0.4224, loss_bbox: 0.3632, acc: 86.1680, loss_meta_cls: 0.1763, meta_acc: 15.8667, loss: 1.1349
+2024-12-21 18:34:44,249 - mmfewshot - INFO - Iter [650/18000]	lr: 5.000e-03, eta: 2:06:21, time: 0.438, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0898, loss_rpn_bbox: 0.0703, loss_cls: 0.3850, loss_bbox: 0.3843, acc: 86.8008, loss_meta_cls: 0.1752, meta_acc: 14.8000, loss: 1.1046
+2024-12-21 18:35:05,939 - mmfewshot - INFO - Iter [700/18000]	lr: 5.000e-03, eta: 2:05:55, time: 0.434, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0969, loss_rpn_bbox: 0.0741, loss_cls: 0.3863, loss_bbox: 0.3580, acc: 86.9609, loss_meta_cls: 0.1739, meta_acc: 14.4000, loss: 1.0893
+2024-12-21 18:35:27,108 - mmfewshot - INFO - Iter [750/18000]	lr: 5.000e-03, eta: 2:05:18, time: 0.424, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0848, loss_rpn_bbox: 0.0778, loss_cls: 0.3861, loss_bbox: 0.3562, acc: 87.3984, loss_meta_cls: 0.1727, meta_acc: 14.0000, loss: 1.0776
+2024-12-21 18:35:48,791 - mmfewshot - INFO - Iter [800/18000]	lr: 5.000e-03, eta: 2:04:54, time: 0.433, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0962, loss_rpn_bbox: 0.0742, loss_cls: 0.3739, loss_bbox: 0.3702, acc: 86.9102, loss_meta_cls: 0.1717, meta_acc: 15.7333, loss: 1.0862
+2024-12-21 18:36:10,702 - mmfewshot - INFO - Iter [850/18000]	lr: 5.000e-03, eta: 2:04:35, time: 0.438, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0922, loss_rpn_bbox: 0.0920, loss_cls: 0.3953, loss_bbox: 0.3476, acc: 86.7539, loss_meta_cls: 0.1702, meta_acc: 14.4000, loss: 1.0972
+2024-12-21 18:36:32,539 - mmfewshot - INFO - Iter [900/18000]	lr: 5.000e-03, eta: 2:04:14, time: 0.437, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0877, loss_rpn_bbox: 0.0759, loss_cls: 0.3681, loss_bbox: 0.3443, acc: 87.0625, loss_meta_cls: 0.1702, meta_acc: 14.8000, loss: 1.0462
+2024-12-21 18:36:53,981 - mmfewshot - INFO - Iter [950/18000]	lr: 5.000e-03, eta: 2:03:45, time: 0.429, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0828, loss_rpn_bbox: 0.0711, loss_cls: 0.3794, loss_bbox: 0.3563, acc: 87.1289, loss_meta_cls: 0.1681, meta_acc: 13.0667, loss: 1.0576
+2024-12-21 18:37:15,870 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 18:37:15,871 - mmfewshot - INFO - Iter [1000/18000]	lr: 5.000e-03, eta: 2:03:26, time: 0.438, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0857, loss_rpn_bbox: 0.0690, loss_cls: 0.3824, loss_bbox: 0.3589, acc: 86.8438, loss_meta_cls: 0.1670, meta_acc: 15.8667, loss: 1.0628
+2024-12-21 18:37:37,900 - mmfewshot - INFO - Iter [1050/18000]	lr: 5.000e-03, eta: 2:03:08, time: 0.440, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0916, loss_rpn_bbox: 0.0714, loss_cls: 0.4079, loss_bbox: 0.3549, acc: 85.9766, loss_meta_cls: 0.1657, meta_acc: 15.6000, loss: 1.0915
+2024-12-21 18:37:59,907 - mmfewshot - INFO - Iter [1100/18000]	lr: 5.000e-03, eta: 2:02:49, time: 0.440, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0844, loss_rpn_bbox: 0.0703, loss_cls: 0.3644, loss_bbox: 0.3399, acc: 87.2305, loss_meta_cls: 0.1630, meta_acc: 17.4667, loss: 1.0220
+2024-12-21 18:38:21,883 - mmfewshot - INFO - Iter [1150/18000]	lr: 5.000e-03, eta: 2:02:30, time: 0.439, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0877, loss_rpn_bbox: 0.0740, loss_cls: 0.3605, loss_bbox: 0.3539, acc: 87.4766, loss_meta_cls: 0.1648, meta_acc: 16.4000, loss: 1.0409
+2024-12-21 18:38:43,711 - mmfewshot - INFO - Iter [1200/18000]	lr: 5.000e-03, eta: 2:02:08, time: 0.436, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0826, loss_rpn_bbox: 0.0634, loss_cls: 0.3565, loss_bbox: 0.3330, acc: 87.7695, loss_meta_cls: 0.1633, meta_acc: 14.6667, loss: 0.9987
+2024-12-21 18:39:05,128 - mmfewshot - INFO - Iter [1250/18000]	lr: 5.000e-03, eta: 2:01:41, time: 0.429, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0875, loss_rpn_bbox: 0.0716, loss_cls: 0.3314, loss_bbox: 0.3202, acc: 88.3203, loss_meta_cls: 0.1632, meta_acc: 16.6667, loss: 0.9740
+2024-12-21 18:39:26,733 - mmfewshot - INFO - Iter [1300/18000]	lr: 5.000e-03, eta: 2:01:17, time: 0.432, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0899, loss_rpn_bbox: 0.0739, loss_cls: 0.3426, loss_bbox: 0.3153, acc: 87.9688, loss_meta_cls: 0.1607, meta_acc: 17.7333, loss: 0.9823
+2024-12-21 18:39:48,598 - mmfewshot - INFO - Iter [1350/18000]	lr: 5.000e-03, eta: 2:00:56, time: 0.437, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0830, loss_rpn_bbox: 0.0844, loss_cls: 0.3337, loss_bbox: 0.3115, acc: 88.0547, loss_meta_cls: 0.1614, meta_acc: 17.6000, loss: 0.9742
+2024-12-21 18:40:10,584 - mmfewshot - INFO - Iter [1400/18000]	lr: 5.000e-03, eta: 2:00:37, time: 0.439, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0834, loss_rpn_bbox: 0.0746, loss_cls: 0.3592, loss_bbox: 0.3132, acc: 87.8867, loss_meta_cls: 0.1602, meta_acc: 17.6000, loss: 0.9906
+2024-12-21 18:40:32,549 - mmfewshot - INFO - Iter [1450/18000]	lr: 5.000e-03, eta: 2:00:17, time: 0.439, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0847, loss_rpn_bbox: 0.0727, loss_cls: 0.3495, loss_bbox: 0.3162, acc: 87.5625, loss_meta_cls: 0.1612, meta_acc: 18.5333, loss: 0.9844
+2024-12-21 18:40:54,129 - mmfewshot - INFO - Iter [1500/18000]	lr: 5.000e-03, eta: 1:59:52, time: 0.432, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0904, loss_rpn_bbox: 0.0737, loss_cls: 0.3570, loss_bbox: 0.3413, acc: 87.3828, loss_meta_cls: 0.1566, meta_acc: 19.4667, loss: 1.0190
+2024-12-21 18:41:15,849 - mmfewshot - INFO - Iter [1550/18000]	lr: 5.000e-03, eta: 1:59:30, time: 0.435, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0774, loss_rpn_bbox: 0.0713, loss_cls: 0.3281, loss_bbox: 0.3086, acc: 88.3281, loss_meta_cls: 0.1567, meta_acc: 19.6000, loss: 0.9421
+2024-12-21 18:41:37,290 - mmfewshot - INFO - Iter [1600/18000]	lr: 5.000e-03, eta: 1:59:04, time: 0.429, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0852, loss_rpn_bbox: 0.0701, loss_cls: 0.3401, loss_bbox: 0.3248, acc: 88.3164, loss_meta_cls: 0.1602, meta_acc: 20.1333, loss: 0.9804
+2024-12-21 18:41:58,961 - mmfewshot - INFO - Iter [1650/18000]	lr: 5.000e-03, eta: 1:58:42, time: 0.433, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0796, loss_rpn_bbox: 0.0703, loss_cls: 0.3124, loss_bbox: 0.3025, acc: 89.2500, loss_meta_cls: 0.1571, meta_acc: 19.6000, loss: 0.9221
+2024-12-21 18:42:20,836 - mmfewshot - INFO - Iter [1700/18000]	lr: 5.000e-03, eta: 1:58:21, time: 0.437, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0842, loss_rpn_bbox: 0.0632, loss_cls: 0.3461, loss_bbox: 0.3191, acc: 87.9492, loss_meta_cls: 0.1585, meta_acc: 20.6667, loss: 0.9711
+2024-12-21 18:42:42,814 - mmfewshot - INFO - Iter [1750/18000]	lr: 5.000e-03, eta: 1:58:01, time: 0.440, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0739, loss_rpn_bbox: 0.0739, loss_cls: 0.3370, loss_bbox: 0.3117, acc: 88.2656, loss_meta_cls: 0.1559, meta_acc: 20.2667, loss: 0.9524
+2024-12-21 18:43:04,599 - mmfewshot - INFO - Iter [1800/18000]	lr: 5.000e-03, eta: 1:57:39, time: 0.436, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0747, loss_rpn_bbox: 0.0625, loss_cls: 0.3273, loss_bbox: 0.2969, acc: 88.6680, loss_meta_cls: 0.1578, meta_acc: 18.8000, loss: 0.9192
+2024-12-21 18:43:26,619 - mmfewshot - INFO - Iter [1850/18000]	lr: 5.000e-03, eta: 1:57:19, time: 0.440, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0798, loss_rpn_bbox: 0.0630, loss_cls: 0.3018, loss_bbox: 0.3025, acc: 89.2344, loss_meta_cls: 0.1519, meta_acc: 21.6000, loss: 0.8990
+2024-12-21 18:43:48,444 - mmfewshot - INFO - Iter [1900/18000]	lr: 5.000e-03, eta: 1:56:57, time: 0.436, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0695, loss_rpn_bbox: 0.0741, loss_cls: 0.3186, loss_bbox: 0.3219, acc: 88.9766, loss_meta_cls: 0.1508, meta_acc: 25.0667, loss: 0.9349
+2024-12-21 18:44:10,500 - mmfewshot - INFO - Iter [1950/18000]	lr: 5.000e-03, eta: 1:56:38, time: 0.441, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0739, loss_rpn_bbox: 0.0711, loss_cls: 0.3053, loss_bbox: 0.2999, acc: 89.1719, loss_meta_cls: 0.1521, meta_acc: 21.2000, loss: 0.9023
+2024-12-21 18:44:32,304 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 18:44:32,305 - mmfewshot - INFO - Iter [2000/18000]	lr: 5.000e-03, eta: 1:56:16, time: 0.436, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0760, loss_rpn_bbox: 0.0690, loss_cls: 0.3115, loss_bbox: 0.2929, acc: 89.2734, loss_meta_cls: 0.1517, meta_acc: 24.1333, loss: 0.9011
+2024-12-21 18:44:53,887 - mmfewshot - INFO - Iter [2050/18000]	lr: 5.000e-03, eta: 1:55:53, time: 0.431, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0737, loss_rpn_bbox: 0.0589, loss_cls: 0.3420, loss_bbox: 0.3077, acc: 88.5781, loss_meta_cls: 0.1568, meta_acc: 22.1333, loss: 0.9392
+2024-12-21 18:45:15,326 - mmfewshot - INFO - Iter [2100/18000]	lr: 5.000e-03, eta: 1:55:28, time: 0.429, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0875, loss_rpn_bbox: 0.0715, loss_cls: 0.3389, loss_bbox: 0.3200, acc: 88.7500, loss_meta_cls: 0.1514, meta_acc: 22.4000, loss: 0.9693
+2024-12-21 18:45:37,144 - mmfewshot - INFO - Iter [2150/18000]	lr: 5.000e-03, eta: 1:55:07, time: 0.437, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0895, loss_rpn_bbox: 0.0745, loss_cls: 0.3360, loss_bbox: 0.2943, acc: 88.3398, loss_meta_cls: 0.1522, meta_acc: 22.4000, loss: 0.9465
+2024-12-21 18:45:58,853 - mmfewshot - INFO - Iter [2200/18000]	lr: 5.000e-03, eta: 1:54:44, time: 0.434, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0835, loss_rpn_bbox: 0.0644, loss_cls: 0.3346, loss_bbox: 0.2977, acc: 88.0586, loss_meta_cls: 0.1529, meta_acc: 22.5333, loss: 0.9330
+2024-12-21 18:46:20,303 - mmfewshot - INFO - Iter [2250/18000]	lr: 5.000e-03, eta: 1:54:20, time: 0.429, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0758, loss_rpn_bbox: 0.0710, loss_cls: 0.3001, loss_bbox: 0.2898, acc: 89.5312, loss_meta_cls: 0.1512, meta_acc: 22.8000, loss: 0.8880
+2024-12-21 18:46:41,701 - mmfewshot - INFO - Iter [2300/18000]	lr: 5.000e-03, eta: 1:53:56, time: 0.428, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0819, loss_rpn_bbox: 0.0703, loss_cls: 0.3070, loss_bbox: 0.2944, acc: 89.2773, loss_meta_cls: 0.1505, meta_acc: 22.9333, loss: 0.9041
+2024-12-21 18:47:02,980 - mmfewshot - INFO - Iter [2350/18000]	lr: 5.000e-03, eta: 1:53:31, time: 0.425, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0800, loss_rpn_bbox: 0.0711, loss_cls: 0.3416, loss_bbox: 0.2960, acc: 88.4492, loss_meta_cls: 0.1462, meta_acc: 26.4000, loss: 0.9349
+2024-12-21 18:47:24,846 - mmfewshot - INFO - Iter [2400/18000]	lr: 5.000e-03, eta: 1:53:10, time: 0.438, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0784, loss_rpn_bbox: 0.0746, loss_cls: 0.3164, loss_bbox: 0.2818, acc: 88.9141, loss_meta_cls: 0.1490, meta_acc: 22.1333, loss: 0.9002
+2024-12-21 18:47:46,735 - mmfewshot - INFO - Iter [2450/18000]	lr: 5.000e-03, eta: 1:52:49, time: 0.438, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0803, loss_rpn_bbox: 0.0667, loss_cls: 0.3371, loss_bbox: 0.2994, acc: 87.7930, loss_meta_cls: 0.1486, meta_acc: 26.5333, loss: 0.9321
+2024-12-21 18:48:08,083 - mmfewshot - INFO - Iter [2500/18000]	lr: 5.000e-03, eta: 1:52:24, time: 0.427, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0718, loss_rpn_bbox: 0.0743, loss_cls: 0.3100, loss_bbox: 0.2896, acc: 89.1562, loss_meta_cls: 0.1475, meta_acc: 23.0667, loss: 0.8933
+2024-12-21 18:48:29,505 - mmfewshot - INFO - Iter [2550/18000]	lr: 5.000e-03, eta: 1:52:00, time: 0.429, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0726, loss_rpn_bbox: 0.0695, loss_cls: 0.2897, loss_bbox: 0.2844, acc: 89.9297, loss_meta_cls: 0.1433, meta_acc: 24.9333, loss: 0.8595
+2024-12-21 18:48:51,015 - mmfewshot - INFO - Iter [2600/18000]	lr: 5.000e-03, eta: 1:51:37, time: 0.430, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0732, loss_rpn_bbox: 0.0740, loss_cls: 0.3206, loss_bbox: 0.2968, acc: 88.9023, loss_meta_cls: 0.1463, meta_acc: 23.2000, loss: 0.9109
+2024-12-21 18:49:12,498 - mmfewshot - INFO - Iter [2650/18000]	lr: 5.000e-03, eta: 1:51:14, time: 0.429, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0793, loss_rpn_bbox: 0.0665, loss_cls: 0.3343, loss_bbox: 0.3003, acc: 88.7500, loss_meta_cls: 0.1426, meta_acc: 26.4000, loss: 0.9230
+2024-12-21 18:49:33,951 - mmfewshot - INFO - Iter [2700/18000]	lr: 5.000e-03, eta: 1:50:51, time: 0.430, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0777, loss_rpn_bbox: 0.0762, loss_cls: 0.3176, loss_bbox: 0.2759, acc: 89.1562, loss_meta_cls: 0.1418, meta_acc: 26.1333, loss: 0.8893
+2024-12-21 18:49:56,143 - mmfewshot - INFO - Iter [2750/18000]	lr: 5.000e-03, eta: 1:50:31, time: 0.443, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0753, loss_rpn_bbox: 0.0741, loss_cls: 0.3098, loss_bbox: 0.2838, acc: 89.0469, loss_meta_cls: 0.1416, meta_acc: 27.7333, loss: 0.8846
+2024-12-21 18:50:18,026 - mmfewshot - INFO - Iter [2800/18000]	lr: 5.000e-03, eta: 1:50:10, time: 0.438, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0699, loss_rpn_bbox: 0.0699, loss_cls: 0.3112, loss_bbox: 0.2750, acc: 89.0703, loss_meta_cls: 0.1404, meta_acc: 27.7333, loss: 0.8664
+2024-12-21 18:50:40,089 - mmfewshot - INFO - Iter [2850/18000]	lr: 5.000e-03, eta: 1:49:50, time: 0.442, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0731, loss_rpn_bbox: 0.0775, loss_cls: 0.3059, loss_bbox: 0.2820, acc: 89.0859, loss_meta_cls: 0.1384, meta_acc: 25.8667, loss: 0.8769
+2024-12-21 18:51:01,858 - mmfewshot - INFO - Iter [2900/18000]	lr: 5.000e-03, eta: 1:49:29, time: 0.435, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0688, loss_rpn_bbox: 0.0678, loss_cls: 0.2956, loss_bbox: 0.2663, acc: 89.6758, loss_meta_cls: 0.1382, meta_acc: 27.3333, loss: 0.8368
+2024-12-21 18:51:23,920 - mmfewshot - INFO - Iter [2950/18000]	lr: 5.000e-03, eta: 1:49:08, time: 0.441, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0799, loss_rpn_bbox: 0.0721, loss_cls: 0.3231, loss_bbox: 0.2650, acc: 88.7109, loss_meta_cls: 0.1429, meta_acc: 27.8667, loss: 0.8830
+2024-12-21 18:51:45,928 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 18:51:45,928 - mmfewshot - INFO - Iter [3000/18000]	lr: 5.000e-03, eta: 1:48:48, time: 0.440, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0715, loss_rpn_bbox: 0.0716, loss_cls: 0.2900, loss_bbox: 0.2556, acc: 89.9453, loss_meta_cls: 0.1358, meta_acc: 30.2667, loss: 0.8245
+2024-12-21 18:52:08,092 - mmfewshot - INFO - Iter [3050/18000]	lr: 5.000e-03, eta: 1:48:28, time: 0.443, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0743, loss_rpn_bbox: 0.0769, loss_cls: 0.3367, loss_bbox: 0.2833, acc: 88.3555, loss_meta_cls: 0.1371, meta_acc: 30.0000, loss: 0.9084
+2024-12-21 18:52:29,705 - mmfewshot - INFO - Iter [3100/18000]	lr: 5.000e-03, eta: 1:48:06, time: 0.432, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0565, loss_rpn_bbox: 0.0573, loss_cls: 0.3050, loss_bbox: 0.2605, acc: 89.4141, loss_meta_cls: 0.1337, meta_acc: 31.0667, loss: 0.8130
+2024-12-21 18:52:51,228 - mmfewshot - INFO - Iter [3150/18000]	lr: 5.000e-03, eta: 1:47:43, time: 0.431, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0857, loss_rpn_bbox: 0.0703, loss_cls: 0.3179, loss_bbox: 0.2666, acc: 89.3828, loss_meta_cls: 0.1370, meta_acc: 30.0000, loss: 0.8775
+2024-12-21 18:53:12,813 - mmfewshot - INFO - Iter [3200/18000]	lr: 5.000e-03, eta: 1:47:20, time: 0.431, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0754, loss_rpn_bbox: 0.0656, loss_cls: 0.2769, loss_bbox: 0.2612, acc: 90.2578, loss_meta_cls: 0.1349, meta_acc: 31.6000, loss: 0.8141
+2024-12-21 18:53:34,742 - mmfewshot - INFO - Iter [3250/18000]	lr: 5.000e-03, eta: 1:46:59, time: 0.438, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0793, loss_rpn_bbox: 0.0693, loss_cls: 0.3303, loss_bbox: 0.2725, acc: 88.5469, loss_meta_cls: 0.1393, meta_acc: 27.8667, loss: 0.8907
+2024-12-21 18:53:56,407 - mmfewshot - INFO - Iter [3300/18000]	lr: 5.000e-03, eta: 1:46:37, time: 0.433, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0677, loss_rpn_bbox: 0.0708, loss_cls: 0.2938, loss_bbox: 0.2670, acc: 89.3125, loss_meta_cls: 0.1297, meta_acc: 32.4000, loss: 0.8291
+2024-12-21 18:54:17,998 - mmfewshot - INFO - Iter [3350/18000]	lr: 5.000e-03, eta: 1:46:14, time: 0.432, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0747, loss_rpn_bbox: 0.0721, loss_cls: 0.3013, loss_bbox: 0.2692, acc: 89.3633, loss_meta_cls: 0.1338, meta_acc: 31.7333, loss: 0.8511
+2024-12-21 18:54:39,921 - mmfewshot - INFO - Iter [3400/18000]	lr: 5.000e-03, eta: 1:45:53, time: 0.438, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0616, loss_rpn_bbox: 0.0656, loss_cls: 0.2890, loss_bbox: 0.2639, acc: 89.6602, loss_meta_cls: 0.1316, meta_acc: 33.4667, loss: 0.8117
+2024-12-21 18:55:01,590 - mmfewshot - INFO - Iter [3450/18000]	lr: 5.000e-03, eta: 1:45:31, time: 0.434, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0705, loss_rpn_bbox: 0.0638, loss_cls: 0.3280, loss_bbox: 0.2761, acc: 88.9766, loss_meta_cls: 0.1340, meta_acc: 32.1333, loss: 0.8723
+2024-12-21 18:55:23,271 - mmfewshot - INFO - Iter [3500/18000]	lr: 5.000e-03, eta: 1:45:09, time: 0.434, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0753, loss_rpn_bbox: 0.0689, loss_cls: 0.3058, loss_bbox: 0.2881, acc: 89.1172, loss_meta_cls: 0.1300, meta_acc: 34.2667, loss: 0.8682
+2024-12-21 18:55:45,697 - mmfewshot - INFO - Iter [3550/18000]	lr: 5.000e-03, eta: 1:44:50, time: 0.448, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0674, loss_rpn_bbox: 0.0662, loss_cls: 0.2930, loss_bbox: 0.2557, acc: 89.2539, loss_meta_cls: 0.1244, meta_acc: 36.2667, loss: 0.8066
+2024-12-21 18:56:07,782 - mmfewshot - INFO - Iter [3600/18000]	lr: 5.000e-03, eta: 1:44:30, time: 0.442, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0719, loss_rpn_bbox: 0.0670, loss_cls: 0.2849, loss_bbox: 0.2518, acc: 89.6211, loss_meta_cls: 0.1331, meta_acc: 31.0667, loss: 0.8087
+2024-12-21 18:56:29,949 - mmfewshot - INFO - Iter [3650/18000]	lr: 5.000e-03, eta: 1:44:09, time: 0.443, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0801, loss_rpn_bbox: 0.0635, loss_cls: 0.3072, loss_bbox: 0.2784, acc: 89.0312, loss_meta_cls: 0.1236, meta_acc: 35.6000, loss: 0.8527
+2024-12-21 18:56:51,855 - mmfewshot - INFO - Iter [3700/18000]	lr: 5.000e-03, eta: 1:43:48, time: 0.438, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0623, loss_rpn_bbox: 0.0624, loss_cls: 0.2747, loss_bbox: 0.2693, acc: 90.1641, loss_meta_cls: 0.1211, meta_acc: 38.1333, loss: 0.7898
+2024-12-21 18:57:13,722 - mmfewshot - INFO - Iter [3750/18000]	lr: 5.000e-03, eta: 1:43:27, time: 0.437, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0578, loss_rpn_bbox: 0.0664, loss_cls: 0.2518, loss_bbox: 0.2565, acc: 90.7734, loss_meta_cls: 0.1307, meta_acc: 31.7333, loss: 0.7632
+2024-12-21 18:57:35,614 - mmfewshot - INFO - Iter [3800/18000]	lr: 5.000e-03, eta: 1:43:05, time: 0.438, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0751, loss_rpn_bbox: 0.0678, loss_cls: 0.2992, loss_bbox: 0.2765, acc: 89.4102, loss_meta_cls: 0.1220, meta_acc: 38.9333, loss: 0.8407
+2024-12-21 18:57:57,582 - mmfewshot - INFO - Iter [3850/18000]	lr: 5.000e-03, eta: 1:42:44, time: 0.439, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0601, loss_rpn_bbox: 0.0711, loss_cls: 0.2644, loss_bbox: 0.2440, acc: 90.7773, loss_meta_cls: 0.1218, meta_acc: 36.6667, loss: 0.7615
+2024-12-21 18:58:19,582 - mmfewshot - INFO - Iter [3900/18000]	lr: 5.000e-03, eta: 1:42:23, time: 0.440, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0622, loss_rpn_bbox: 0.0668, loss_cls: 0.2324, loss_bbox: 0.2474, acc: 91.5469, loss_meta_cls: 0.1206, meta_acc: 36.9333, loss: 0.7293
+2024-12-21 18:58:41,739 - mmfewshot - INFO - Iter [3950/18000]	lr: 5.000e-03, eta: 1:42:03, time: 0.443, data_time: 0.038, memory: 9778, loss_rpn_cls: 0.0604, loss_rpn_bbox: 0.0703, loss_cls: 0.2537, loss_bbox: 0.2448, acc: 90.7695, loss_meta_cls: 0.1186, meta_acc: 37.8667, loss: 0.7478
+2024-12-21 18:59:03,724 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 18:59:03,725 - mmfewshot - INFO - Iter [4000/18000]	lr: 5.000e-03, eta: 1:41:42, time: 0.440, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0529, loss_rpn_bbox: 0.0583, loss_cls: 0.2490, loss_bbox: 0.2561, acc: 91.4297, loss_meta_cls: 0.1192, meta_acc: 40.9333, loss: 0.7356
+2024-12-21 18:59:25,499 - mmfewshot - INFO - Iter [4050/18000]	lr: 5.000e-03, eta: 1:41:20, time: 0.435, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0637, loss_rpn_bbox: 0.0677, loss_cls: 0.2511, loss_bbox: 0.2493, acc: 91.0469, loss_meta_cls: 0.1199, meta_acc: 36.2667, loss: 0.7518
+2024-12-21 18:59:47,217 - mmfewshot - INFO - Iter [4100/18000]	lr: 5.000e-03, eta: 1:40:58, time: 0.434, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0623, loss_rpn_bbox: 0.0649, loss_cls: 0.2682, loss_bbox: 0.2623, acc: 90.5469, loss_meta_cls: 0.1162, meta_acc: 41.4667, loss: 0.7739
+2024-12-21 19:00:09,031 - mmfewshot - INFO - Iter [4150/18000]	lr: 5.000e-03, eta: 1:40:36, time: 0.436, data_time: 0.038, memory: 9778, loss_rpn_cls: 0.0674, loss_rpn_bbox: 0.0540, loss_cls: 0.2749, loss_bbox: 0.2478, acc: 90.0195, loss_meta_cls: 0.1110, meta_acc: 43.0667, loss: 0.7550
+2024-12-21 19:00:31,308 - mmfewshot - INFO - Iter [4200/18000]	lr: 5.000e-03, eta: 1:40:16, time: 0.446, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0626, loss_rpn_bbox: 0.0655, loss_cls: 0.2719, loss_bbox: 0.2652, acc: 90.0117, loss_meta_cls: 0.1130, meta_acc: 43.2000, loss: 0.7783
+2024-12-21 19:00:53,182 - mmfewshot - INFO - Iter [4250/18000]	lr: 5.000e-03, eta: 1:39:54, time: 0.437, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0660, loss_rpn_bbox: 0.0665, loss_cls: 0.2407, loss_bbox: 0.2564, acc: 91.5273, loss_meta_cls: 0.1118, meta_acc: 42.2667, loss: 0.7415
+2024-12-21 19:01:14,906 - mmfewshot - INFO - Iter [4300/18000]	lr: 5.000e-03, eta: 1:39:32, time: 0.434, data_time: 0.035, memory: 9778, loss_rpn_cls: 0.0550, loss_rpn_bbox: 0.0622, loss_cls: 0.2720, loss_bbox: 0.2525, acc: 90.2109, loss_meta_cls: 0.1147, meta_acc: 42.6667, loss: 0.7564
+2024-12-21 19:01:37,136 - mmfewshot - INFO - Iter [4350/18000]	lr: 5.000e-03, eta: 1:39:12, time: 0.445, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0584, loss_rpn_bbox: 0.0663, loss_cls: 0.2496, loss_bbox: 0.2340, acc: 90.8008, loss_meta_cls: 0.1121, meta_acc: 42.2667, loss: 0.7203
+2024-12-21 19:01:59,101 - mmfewshot - INFO - Iter [4400/18000]	lr: 5.000e-03, eta: 1:38:50, time: 0.439, data_time: 0.039, memory: 9778, loss_rpn_cls: 0.0597, loss_rpn_bbox: 0.0673, loss_cls: 0.2649, loss_bbox: 0.2523, acc: 90.6445, loss_meta_cls: 0.1135, meta_acc: 43.7333, loss: 0.7576
+2024-12-21 19:02:21,196 - mmfewshot - INFO - Iter [4450/18000]	lr: 5.000e-03, eta: 1:38:30, time: 0.442, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0604, loss_rpn_bbox: 0.0690, loss_cls: 0.2633, loss_bbox: 0.2541, acc: 90.3867, loss_meta_cls: 0.1077, meta_acc: 44.9333, loss: 0.7544
+2024-12-21 19:02:43,240 - mmfewshot - INFO - Iter [4500/18000]	lr: 5.000e-03, eta: 1:38:08, time: 0.441, data_time: 0.038, memory: 9778, loss_rpn_cls: 0.0561, loss_rpn_bbox: 0.0599, loss_cls: 0.2322, loss_bbox: 0.2361, acc: 92.0078, loss_meta_cls: 0.1073, meta_acc: 45.3333, loss: 0.6916
+2024-12-21 19:03:05,171 - mmfewshot - INFO - Iter [4550/18000]	lr: 5.000e-03, eta: 1:37:47, time: 0.439, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0627, loss_rpn_bbox: 0.0657, loss_cls: 0.2531, loss_bbox: 0.2330, acc: 91.0469, loss_meta_cls: 0.1046, meta_acc: 45.0667, loss: 0.7191
+2024-12-21 19:03:27,193 - mmfewshot - INFO - Iter [4600/18000]	lr: 5.000e-03, eta: 1:37:26, time: 0.441, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0750, loss_rpn_bbox: 0.0617, loss_cls: 0.2671, loss_bbox: 0.2574, acc: 90.3828, loss_meta_cls: 0.1092, meta_acc: 43.7333, loss: 0.7705
+2024-12-21 19:03:49,448 - mmfewshot - INFO - Iter [4650/18000]	lr: 5.000e-03, eta: 1:37:05, time: 0.445, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0647, loss_rpn_bbox: 0.0620, loss_cls: 0.2497, loss_bbox: 0.2490, acc: 91.0859, loss_meta_cls: 0.1099, meta_acc: 43.4667, loss: 0.7353
+2024-12-21 19:04:11,322 - mmfewshot - INFO - Iter [4700/18000]	lr: 5.000e-03, eta: 1:36:44, time: 0.437, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0595, loss_rpn_bbox: 0.0687, loss_cls: 0.2436, loss_bbox: 0.2478, acc: 91.5234, loss_meta_cls: 0.1052, meta_acc: 45.8667, loss: 0.7248
+2024-12-21 19:04:33,099 - mmfewshot - INFO - Iter [4750/18000]	lr: 5.000e-03, eta: 1:36:22, time: 0.436, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0618, loss_rpn_bbox: 0.0616, loss_cls: 0.2661, loss_bbox: 0.2464, acc: 90.6172, loss_meta_cls: 0.1025, meta_acc: 48.8000, loss: 0.7385
+2024-12-21 19:04:54,922 - mmfewshot - INFO - Iter [4800/18000]	lr: 5.000e-03, eta: 1:36:00, time: 0.437, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0749, loss_rpn_bbox: 0.0544, loss_cls: 0.2716, loss_bbox: 0.2539, acc: 90.3281, loss_meta_cls: 0.1078, meta_acc: 41.6000, loss: 0.7625
+2024-12-21 19:05:17,071 - mmfewshot - INFO - Iter [4850/18000]	lr: 5.000e-03, eta: 1:35:39, time: 0.443, data_time: 0.038, memory: 9778, loss_rpn_cls: 0.0718, loss_rpn_bbox: 0.0684, loss_cls: 0.2606, loss_bbox: 0.2400, acc: 90.7891, loss_meta_cls: 0.1070, meta_acc: 46.0000, loss: 0.7478
+2024-12-21 19:05:38,534 - mmfewshot - INFO - Iter [4900/18000]	lr: 5.000e-03, eta: 1:35:16, time: 0.429, data_time: 0.034, memory: 9778, loss_rpn_cls: 0.0626, loss_rpn_bbox: 0.0659, loss_cls: 0.2661, loss_bbox: 0.2485, acc: 90.3398, loss_meta_cls: 0.1015, meta_acc: 48.0000, loss: 0.7446
+2024-12-21 19:06:00,000 - mmfewshot - INFO - Iter [4950/18000]	lr: 5.000e-03, eta: 1:34:53, time: 0.429, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0660, loss_rpn_bbox: 0.0605, loss_cls: 0.2633, loss_bbox: 0.2403, acc: 90.5820, loss_meta_cls: 0.1001, meta_acc: 52.9333, loss: 0.7301
+2024-12-21 19:06:28,198 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 19:06:28,199 - mmfewshot - INFO - Iter [5000/18000]	lr: 5.000e-03, eta: 1:34:48, time: 0.564, data_time: 0.163, memory: 9778, loss_rpn_cls: 0.0553, loss_rpn_bbox: 0.0616, loss_cls: 0.2500, loss_bbox: 0.2270, acc: 91.1250, loss_meta_cls: 0.1006, meta_acc: 49.7333, loss: 0.6944
+2024-12-21 19:06:50,226 - mmfewshot - INFO - Iter [5050/18000]	lr: 5.000e-03, eta: 1:34:27, time: 0.441, data_time: 0.038, memory: 9778, loss_rpn_cls: 0.0674, loss_rpn_bbox: 0.0681, loss_cls: 0.2761, loss_bbox: 0.2399, acc: 90.6367, loss_meta_cls: 0.1027, meta_acc: 49.0667, loss: 0.7542
+2024-12-21 19:07:12,512 - mmfewshot - INFO - Iter [5100/18000]	lr: 5.000e-03, eta: 1:34:06, time: 0.445, data_time: 0.039, memory: 9778, loss_rpn_cls: 0.0648, loss_rpn_bbox: 0.0610, loss_cls: 0.2650, loss_bbox: 0.2351, acc: 90.9766, loss_meta_cls: 0.0929, meta_acc: 51.7333, loss: 0.7188
+2024-12-21 19:07:35,025 - mmfewshot - INFO - Iter [5150/18000]	lr: 5.000e-03, eta: 1:33:45, time: 0.451, data_time: 0.039, memory: 9778, loss_rpn_cls: 0.0649, loss_rpn_bbox: 0.0716, loss_cls: 0.2825, loss_bbox: 0.2490, acc: 89.6953, loss_meta_cls: 0.0934, meta_acc: 51.8667, loss: 0.7614
+2024-12-21 19:07:57,561 - mmfewshot - INFO - Iter [5200/18000]	lr: 5.000e-03, eta: 1:33:25, time: 0.451, data_time: 0.038, memory: 9778, loss_rpn_cls: 0.0571, loss_rpn_bbox: 0.0610, loss_cls: 0.2668, loss_bbox: 0.2294, acc: 90.7031, loss_meta_cls: 0.0940, meta_acc: 53.4667, loss: 0.7083
+2024-12-21 19:08:20,016 - mmfewshot - INFO - Iter [5250/18000]	lr: 5.000e-03, eta: 1:33:05, time: 0.449, data_time: 0.040, memory: 9778, loss_rpn_cls: 0.0704, loss_rpn_bbox: 0.0638, loss_cls: 0.2652, loss_bbox: 0.2370, acc: 90.6875, loss_meta_cls: 0.0930, meta_acc: 55.4667, loss: 0.7293
+2024-12-21 19:08:42,184 - mmfewshot - INFO - Iter [5300/18000]	lr: 5.000e-03, eta: 1:32:43, time: 0.443, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0555, loss_rpn_bbox: 0.0563, loss_cls: 0.2302, loss_bbox: 0.2215, acc: 91.6875, loss_meta_cls: 0.0918, meta_acc: 53.3333, loss: 0.6554
+2024-12-21 19:09:04,373 - mmfewshot - INFO - Iter [5350/18000]	lr: 5.000e-03, eta: 1:32:22, time: 0.444, data_time: 0.038, memory: 9778, loss_rpn_cls: 0.0656, loss_rpn_bbox: 0.0657, loss_cls: 0.2721, loss_bbox: 0.2394, acc: 90.6758, loss_meta_cls: 0.0893, meta_acc: 55.8667, loss: 0.7321
+2024-12-21 19:09:26,821 - mmfewshot - INFO - Iter [5400/18000]	lr: 5.000e-03, eta: 1:32:01, time: 0.449, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0662, loss_rpn_bbox: 0.0703, loss_cls: 0.2900, loss_bbox: 0.2649, acc: 89.6055, loss_meta_cls: 0.0946, meta_acc: 49.7333, loss: 0.7860
+2024-12-21 19:09:48,982 - mmfewshot - INFO - Iter [5450/18000]	lr: 5.000e-03, eta: 1:31:40, time: 0.443, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0597, loss_rpn_bbox: 0.0668, loss_cls: 0.2689, loss_bbox: 0.2500, acc: 90.5352, loss_meta_cls: 0.0922, meta_acc: 53.8667, loss: 0.7377
+2024-12-21 19:10:11,677 - mmfewshot - INFO - Iter [5500/18000]	lr: 5.000e-03, eta: 1:31:20, time: 0.454, data_time: 0.040, memory: 9778, loss_rpn_cls: 0.0564, loss_rpn_bbox: 0.0598, loss_cls: 0.2457, loss_bbox: 0.2281, acc: 91.3945, loss_meta_cls: 0.0840, meta_acc: 56.5333, loss: 0.6741
+2024-12-21 19:10:34,008 - mmfewshot - INFO - Iter [5550/18000]	lr: 5.000e-03, eta: 1:30:59, time: 0.447, data_time: 0.039, memory: 9778, loss_rpn_cls: 0.0647, loss_rpn_bbox: 0.0646, loss_cls: 0.2745, loss_bbox: 0.2462, acc: 90.3359, loss_meta_cls: 0.0885, meta_acc: 53.3333, loss: 0.7385
+2024-12-21 19:10:56,053 - mmfewshot - INFO - Iter [5600/18000]	lr: 5.000e-03, eta: 1:30:37, time: 0.441, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0619, loss_rpn_bbox: 0.0607, loss_cls: 0.2459, loss_bbox: 0.2318, acc: 91.2305, loss_meta_cls: 0.0843, meta_acc: 58.5333, loss: 0.6847
+2024-12-21 19:11:18,287 - mmfewshot - INFO - Iter [5650/18000]	lr: 5.000e-03, eta: 1:30:16, time: 0.445, data_time: 0.039, memory: 9778, loss_rpn_cls: 0.0542, loss_rpn_bbox: 0.0588, loss_cls: 0.2509, loss_bbox: 0.2449, acc: 91.1523, loss_meta_cls: 0.0809, meta_acc: 58.6667, loss: 0.6896
+2024-12-21 19:11:40,587 - mmfewshot - INFO - Iter [5700/18000]	lr: 5.000e-03, eta: 1:29:55, time: 0.446, data_time: 0.038, memory: 9778, loss_rpn_cls: 0.0658, loss_rpn_bbox: 0.0600, loss_cls: 0.2702, loss_bbox: 0.2317, acc: 90.4688, loss_meta_cls: 0.0875, meta_acc: 58.2667, loss: 0.7151
+2024-12-21 19:12:02,585 - mmfewshot - INFO - Iter [5750/18000]	lr: 5.000e-03, eta: 1:29:33, time: 0.440, data_time: 0.037, memory: 9778, loss_rpn_cls: 0.0703, loss_rpn_bbox: 0.0604, loss_cls: 0.2674, loss_bbox: 0.2325, acc: 90.3633, loss_meta_cls: 0.0834, meta_acc: 57.6000, loss: 0.7140
+2024-12-21 19:12:24,629 - mmfewshot - INFO - Iter [5800/18000]	lr: 5.000e-03, eta: 1:29:11, time: 0.440, data_time: 0.036, memory: 9778, loss_rpn_cls: 0.0546, loss_rpn_bbox: 0.0639, loss_cls: 0.2717, loss_bbox: 0.2288, acc: 90.1328, loss_meta_cls: 0.0880, meta_acc: 55.2000, loss: 0.7070
+2024-12-21 19:12:47,123 - mmfewshot - INFO - Iter [5850/18000]	lr: 5.000e-03, eta: 1:28:51, time: 0.450, data_time: 0.040, memory: 9778, loss_rpn_cls: 0.0523, loss_rpn_bbox: 0.0690, loss_cls: 0.2485, loss_bbox: 0.2278, acc: 91.1016, loss_meta_cls: 0.0880, meta_acc: 59.4667, loss: 0.6856
+2024-12-21 19:13:09,676 - mmfewshot - INFO - Iter [5900/18000]	lr: 5.000e-03, eta: 1:28:30, time: 0.451, data_time: 0.039, memory: 9778, loss_rpn_cls: 0.0613, loss_rpn_bbox: 0.0598, loss_cls: 0.2509, loss_bbox: 0.2230, acc: 91.1797, loss_meta_cls: 0.0800, meta_acc: 60.5333, loss: 0.6749
+2024-12-21 19:13:32,358 - mmfewshot - INFO - Iter [5950/18000]	lr: 5.000e-03, eta: 1:28:09, time: 0.454, data_time: 0.038, memory: 9778, loss_rpn_cls: 0.0529, loss_rpn_bbox: 0.0567, loss_cls: 0.2476, loss_bbox: 0.2261, acc: 91.3750, loss_meta_cls: 0.0842, meta_acc: 57.7333, loss: 0.6675
+2024-12-21 19:13:54,639 - mmfewshot - INFO - Saving checkpoint at 6000 iterations
+2024-12-21 19:13:56,496 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 19:13:56,497 - mmfewshot - INFO - Iter [6000/18000]	lr: 5.000e-03, eta: 1:27:52, time: 0.484, data_time: 0.038, memory: 9778, loss_rpn_cls: 0.0595, loss_rpn_bbox: 0.0629, loss_cls: 0.2546, loss_bbox: 0.2411, acc: 90.6719, loss_meta_cls: 0.0782, meta_acc: 62.1333, loss: 0.6962
+2024-12-21 19:20:24,862 - mmfewshot - INFO - 
++-------------+------+-------+--------+-------+
+| class       | gts  | dets  | recall | ap    |
++-------------+------+-------+--------+-------+
+| aeroplane   | 285  | 3045  | 0.839  | 0.712 |
+| bicycle     | 337  | 1536  | 0.858  | 0.710 |
+| boat        | 263  | 4926  | 0.817  | 0.552 |
+| bottle      | 469  | 4639  | 0.691  | 0.470 |
+| car         | 1201 | 5041  | 0.881  | 0.773 |
+| cat         | 358  | 1299  | 0.916  | 0.838 |
+| chair       | 756  | 6390  | 0.689  | 0.413 |
+| diningtable | 206  | 1815  | 0.762  | 0.508 |
+| dog         | 489  | 2330  | 0.910  | 0.757 |
+| horse       | 348  | 2320  | 0.897  | 0.732 |
+| person      | 4528 | 11751 | 0.847  | 0.743 |
+| pottedplant | 480  | 2472  | 0.656  | 0.386 |
+| sheep       | 242  | 1106  | 0.810  | 0.607 |
+| train       | 282  | 4116  | 0.872  | 0.637 |
+| tvmonitor   | 308  | 2182  | 0.834  | 0.669 |
++-------------+------+-------+--------+-------+
+| mAP         |      |       |        | 0.634 |
++-------------+------+-------+--------+-------+
+2024-12-21 19:20:24,900 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 19:20:24,901 - mmfewshot - INFO - Iter(val) [4952]	AP50: 0.6340, mAP: 0.6338
+2024-12-21 19:20:47,066 - mmfewshot - INFO - Iter [6050/18000]	lr: 5.000e-03, eta: 1:40:17, time: 8.210, data_time: 7.805, memory: 9779, loss_rpn_cls: 0.0504, loss_rpn_bbox: 0.0585, loss_cls: 0.2556, loss_bbox: 0.2357, acc: 90.9297, loss_meta_cls: 0.0754, meta_acc: 61.6000, loss: 0.6755
+2024-12-21 19:21:09,352 - mmfewshot - INFO - Iter [6100/18000]	lr: 5.000e-03, eta: 1:39:47, time: 0.446, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0580, loss_rpn_bbox: 0.0596, loss_cls: 0.2294, loss_bbox: 0.2327, acc: 91.8633, loss_meta_cls: 0.0735, meta_acc: 62.8000, loss: 0.6532
+2024-12-21 19:21:31,673 - mmfewshot - INFO - Iter [6150/18000]	lr: 5.000e-03, eta: 1:39:16, time: 0.447, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0604, loss_rpn_bbox: 0.0680, loss_cls: 0.2649, loss_bbox: 0.2331, acc: 90.7695, loss_meta_cls: 0.0758, meta_acc: 60.9333, loss: 0.7024
+2024-12-21 19:21:53,970 - mmfewshot - INFO - Iter [6200/18000]	lr: 5.000e-03, eta: 1:38:46, time: 0.446, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0554, loss_rpn_bbox: 0.0610, loss_cls: 0.2338, loss_bbox: 0.2335, acc: 91.9648, loss_meta_cls: 0.0773, meta_acc: 59.3333, loss: 0.6610
+2024-12-21 19:22:16,227 - mmfewshot - INFO - Iter [6250/18000]	lr: 5.000e-03, eta: 1:38:15, time: 0.445, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0630, loss_rpn_bbox: 0.0648, loss_cls: 0.2565, loss_bbox: 0.2429, acc: 91.0586, loss_meta_cls: 0.0782, meta_acc: 60.4000, loss: 0.7054
+2024-12-21 19:22:38,276 - mmfewshot - INFO - Iter [6300/18000]	lr: 5.000e-03, eta: 1:37:44, time: 0.441, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0593, loss_rpn_bbox: 0.0555, loss_cls: 0.2539, loss_bbox: 0.2182, acc: 90.8633, loss_meta_cls: 0.0769, meta_acc: 61.3333, loss: 0.6637
+2024-12-21 19:23:00,365 - mmfewshot - INFO - Iter [6350/18000]	lr: 5.000e-03, eta: 1:37:14, time: 0.442, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0614, loss_rpn_bbox: 0.0563, loss_cls: 0.2402, loss_bbox: 0.2243, acc: 91.4570, loss_meta_cls: 0.0821, meta_acc: 57.3333, loss: 0.6642
+2024-12-21 19:23:22,740 - mmfewshot - INFO - Iter [6400/18000]	lr: 5.000e-03, eta: 1:36:44, time: 0.447, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0547, loss_rpn_bbox: 0.0608, loss_cls: 0.2447, loss_bbox: 0.2168, acc: 91.0391, loss_meta_cls: 0.0722, meta_acc: 64.4000, loss: 0.6491
+2024-12-21 19:23:45,253 - mmfewshot - INFO - Iter [6450/18000]	lr: 5.000e-03, eta: 1:36:14, time: 0.450, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0636, loss_rpn_bbox: 0.0683, loss_cls: 0.2621, loss_bbox: 0.2378, acc: 90.8086, loss_meta_cls: 0.0734, meta_acc: 61.4667, loss: 0.7051
+2024-12-21 19:24:07,026 - mmfewshot - INFO - Iter [6500/18000]	lr: 5.000e-03, eta: 1:35:44, time: 0.435, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0566, loss_rpn_bbox: 0.0595, loss_cls: 0.2258, loss_bbox: 0.2159, acc: 91.7461, loss_meta_cls: 0.0735, meta_acc: 62.6667, loss: 0.6313
+2024-12-21 19:24:29,283 - mmfewshot - INFO - Iter [6550/18000]	lr: 5.000e-03, eta: 1:35:14, time: 0.445, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0713, loss_rpn_bbox: 0.0649, loss_cls: 0.2704, loss_bbox: 0.2380, acc: 90.7461, loss_meta_cls: 0.0705, meta_acc: 64.8000, loss: 0.7151
+2024-12-21 19:24:51,453 - mmfewshot - INFO - Iter [6600/18000]	lr: 5.000e-03, eta: 1:34:44, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0552, loss_rpn_bbox: 0.0644, loss_cls: 0.2473, loss_bbox: 0.2243, acc: 91.1484, loss_meta_cls: 0.0709, meta_acc: 62.8000, loss: 0.6623
+2024-12-21 19:25:13,715 - mmfewshot - INFO - Iter [6650/18000]	lr: 5.000e-03, eta: 1:34:15, time: 0.445, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0589, loss_rpn_bbox: 0.0597, loss_cls: 0.2539, loss_bbox: 0.2285, acc: 90.7617, loss_meta_cls: 0.0710, meta_acc: 64.2667, loss: 0.6720
+2024-12-21 19:25:36,610 - mmfewshot - INFO - Iter [6700/18000]	lr: 5.000e-03, eta: 1:33:46, time: 0.457, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0568, loss_rpn_bbox: 0.0568, loss_cls: 0.2390, loss_bbox: 0.2311, acc: 91.4453, loss_meta_cls: 0.0639, meta_acc: 67.7333, loss: 0.6476
+2024-12-21 19:25:59,220 - mmfewshot - INFO - Iter [6750/18000]	lr: 5.000e-03, eta: 1:33:18, time: 0.453, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0567, loss_rpn_bbox: 0.0608, loss_cls: 0.2293, loss_bbox: 0.2240, acc: 91.6289, loss_meta_cls: 0.0621, meta_acc: 68.0000, loss: 0.6330
+2024-12-21 19:26:21,474 - mmfewshot - INFO - Iter [6800/18000]	lr: 5.000e-03, eta: 1:32:48, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0584, loss_rpn_bbox: 0.0621, loss_cls: 0.2352, loss_bbox: 0.2264, acc: 91.4141, loss_meta_cls: 0.0660, meta_acc: 66.5333, loss: 0.6480
+2024-12-21 19:26:43,736 - mmfewshot - INFO - Iter [6850/18000]	lr: 5.000e-03, eta: 1:32:19, time: 0.445, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0536, loss_rpn_bbox: 0.0596, loss_cls: 0.2420, loss_bbox: 0.2315, acc: 91.3750, loss_meta_cls: 0.0622, meta_acc: 68.6667, loss: 0.6489
+2024-12-21 19:27:06,016 - mmfewshot - INFO - Iter [6900/18000]	lr: 5.000e-03, eta: 1:31:50, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0625, loss_rpn_bbox: 0.0585, loss_cls: 0.2317, loss_bbox: 0.2375, acc: 91.4766, loss_meta_cls: 0.0666, meta_acc: 64.9333, loss: 0.6569
+2024-12-21 19:27:28,594 - mmfewshot - INFO - Iter [6950/18000]	lr: 5.000e-03, eta: 1:31:22, time: 0.452, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0672, loss_rpn_bbox: 0.0673, loss_cls: 0.2489, loss_bbox: 0.2250, acc: 91.0586, loss_meta_cls: 0.0586, meta_acc: 70.8000, loss: 0.6670
+2024-12-21 19:27:50,652 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 19:27:50,653 - mmfewshot - INFO - Iter [7000/18000]	lr: 5.000e-03, eta: 1:30:53, time: 0.441, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0601, loss_rpn_bbox: 0.0657, loss_cls: 0.2423, loss_bbox: 0.2277, acc: 91.1289, loss_meta_cls: 0.0606, meta_acc: 70.0000, loss: 0.6564
+2024-12-21 19:28:12,922 - mmfewshot - INFO - Iter [7050/18000]	lr: 5.000e-03, eta: 1:30:24, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0563, loss_rpn_bbox: 0.0544, loss_cls: 0.2308, loss_bbox: 0.2048, acc: 91.8750, loss_meta_cls: 0.0623, meta_acc: 68.0000, loss: 0.6085
+2024-12-21 19:28:35,048 - mmfewshot - INFO - Iter [7100/18000]	lr: 5.000e-03, eta: 1:29:55, time: 0.443, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0634, loss_rpn_bbox: 0.0578, loss_cls: 0.2393, loss_bbox: 0.2201, acc: 91.4180, loss_meta_cls: 0.0574, meta_acc: 71.4667, loss: 0.6380
+2024-12-21 19:28:57,258 - mmfewshot - INFO - Iter [7150/18000]	lr: 5.000e-03, eta: 1:29:27, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0579, loss_rpn_bbox: 0.0633, loss_cls: 0.2178, loss_bbox: 0.2033, acc: 92.0664, loss_meta_cls: 0.0584, meta_acc: 70.0000, loss: 0.6008
+2024-12-21 19:29:19,204 - mmfewshot - INFO - Iter [7200/18000]	lr: 5.000e-03, eta: 1:28:58, time: 0.439, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0599, loss_rpn_bbox: 0.0644, loss_cls: 0.2421, loss_bbox: 0.2315, acc: 91.2734, loss_meta_cls: 0.0604, meta_acc: 67.3333, loss: 0.6581
+2024-12-21 19:29:41,263 - mmfewshot - INFO - Iter [7250/18000]	lr: 5.000e-03, eta: 1:28:29, time: 0.441, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0593, loss_rpn_bbox: 0.0618, loss_cls: 0.2218, loss_bbox: 0.2074, acc: 92.1602, loss_meta_cls: 0.0545, meta_acc: 74.6667, loss: 0.6048
+2024-12-21 19:30:03,038 - mmfewshot - INFO - Iter [7300/18000]	lr: 5.000e-03, eta: 1:28:00, time: 0.436, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0527, loss_rpn_bbox: 0.0589, loss_cls: 0.2201, loss_bbox: 0.2088, acc: 92.0703, loss_meta_cls: 0.0601, meta_acc: 68.5333, loss: 0.6006
+2024-12-21 19:30:25,135 - mmfewshot - INFO - Iter [7350/18000]	lr: 5.000e-03, eta: 1:27:32, time: 0.442, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0479, loss_rpn_bbox: 0.0590, loss_cls: 0.2000, loss_bbox: 0.2004, acc: 92.5352, loss_meta_cls: 0.0527, meta_acc: 74.5333, loss: 0.5600
+2024-12-21 19:30:47,254 - mmfewshot - INFO - Iter [7400/18000]	lr: 5.000e-03, eta: 1:27:03, time: 0.442, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0459, loss_rpn_bbox: 0.0602, loss_cls: 0.1871, loss_bbox: 0.1898, acc: 93.0508, loss_meta_cls: 0.0625, meta_acc: 66.8000, loss: 0.5454
+2024-12-21 19:31:09,487 - mmfewshot - INFO - Iter [7450/18000]	lr: 5.000e-03, eta: 1:26:35, time: 0.445, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0416, loss_rpn_bbox: 0.0502, loss_cls: 0.1992, loss_bbox: 0.2049, acc: 92.7305, loss_meta_cls: 0.0525, meta_acc: 72.8000, loss: 0.5484
+2024-12-21 19:31:31,714 - mmfewshot - INFO - Iter [7500/18000]	lr: 5.000e-03, eta: 1:26:07, time: 0.444, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0537, loss_rpn_bbox: 0.0613, loss_cls: 0.2247, loss_bbox: 0.2121, acc: 91.6523, loss_meta_cls: 0.0511, meta_acc: 73.6000, loss: 0.6028
+2024-12-21 19:31:54,284 - mmfewshot - INFO - Iter [7550/18000]	lr: 5.000e-03, eta: 1:25:40, time: 0.452, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0495, loss_rpn_bbox: 0.0565, loss_cls: 0.2180, loss_bbox: 0.2099, acc: 92.0352, loss_meta_cls: 0.0515, meta_acc: 74.4000, loss: 0.5854
+2024-12-21 19:32:16,513 - mmfewshot - INFO - Iter [7600/18000]	lr: 5.000e-03, eta: 1:25:12, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0553, loss_rpn_bbox: 0.0658, loss_cls: 0.2133, loss_bbox: 0.2130, acc: 92.2812, loss_meta_cls: 0.0511, meta_acc: 73.8667, loss: 0.5985
+2024-12-21 19:32:38,558 - mmfewshot - INFO - Iter [7650/18000]	lr: 5.000e-03, eta: 1:24:44, time: 0.441, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0524, loss_rpn_bbox: 0.0542, loss_cls: 0.2011, loss_bbox: 0.2098, acc: 92.5469, loss_meta_cls: 0.0499, meta_acc: 74.2667, loss: 0.5673
+2024-12-21 19:33:00,941 - mmfewshot - INFO - Iter [7700/18000]	lr: 5.000e-03, eta: 1:24:17, time: 0.447, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0543, loss_rpn_bbox: 0.0611, loss_cls: 0.2283, loss_bbox: 0.2208, acc: 91.9219, loss_meta_cls: 0.0473, meta_acc: 76.6667, loss: 0.6118
+2024-12-21 19:33:22,859 - mmfewshot - INFO - Iter [7750/18000]	lr: 5.000e-03, eta: 1:23:49, time: 0.439, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0517, loss_rpn_bbox: 0.0546, loss_cls: 0.2166, loss_bbox: 0.2081, acc: 91.9141, loss_meta_cls: 0.0523, meta_acc: 72.4000, loss: 0.5833
+2024-12-21 19:33:45,150 - mmfewshot - INFO - Iter [7800/18000]	lr: 5.000e-03, eta: 1:23:21, time: 0.446, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0521, loss_rpn_bbox: 0.0571, loss_cls: 0.2113, loss_bbox: 0.2070, acc: 92.3789, loss_meta_cls: 0.0527, meta_acc: 73.7333, loss: 0.5801
+2024-12-21 19:34:07,345 - mmfewshot - INFO - Iter [7850/18000]	lr: 5.000e-03, eta: 1:22:54, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0496, loss_rpn_bbox: 0.0541, loss_cls: 0.2123, loss_bbox: 0.2075, acc: 92.4531, loss_meta_cls: 0.0426, meta_acc: 81.3333, loss: 0.5661
+2024-12-21 19:34:29,693 - mmfewshot - INFO - Iter [7900/18000]	lr: 5.000e-03, eta: 1:22:26, time: 0.447, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0563, loss_rpn_bbox: 0.0677, loss_cls: 0.2094, loss_bbox: 0.2090, acc: 92.6172, loss_meta_cls: 0.0457, meta_acc: 77.2000, loss: 0.5881
+2024-12-21 19:34:51,710 - mmfewshot - INFO - Iter [7950/18000]	lr: 5.000e-03, eta: 1:21:59, time: 0.440, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0552, loss_rpn_bbox: 0.0591, loss_cls: 0.2043, loss_bbox: 0.2050, acc: 92.6914, loss_meta_cls: 0.0403, meta_acc: 81.8667, loss: 0.5639
+2024-12-21 19:35:13,667 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 19:35:13,667 - mmfewshot - INFO - Iter [8000/18000]	lr: 5.000e-03, eta: 1:21:31, time: 0.439, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0521, loss_rpn_bbox: 0.0616, loss_cls: 0.2021, loss_bbox: 0.2119, acc: 92.5430, loss_meta_cls: 0.0389, meta_acc: 82.2667, loss: 0.5666
+2024-12-21 19:35:36,117 - mmfewshot - INFO - Iter [8050/18000]	lr: 5.000e-03, eta: 1:21:04, time: 0.449, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0522, loss_rpn_bbox: 0.0616, loss_cls: 0.2184, loss_bbox: 0.2242, acc: 92.0430, loss_meta_cls: 0.0465, meta_acc: 76.2667, loss: 0.6029
+2024-12-21 19:35:58,302 - mmfewshot - INFO - Iter [8100/18000]	lr: 5.000e-03, eta: 1:20:37, time: 0.444, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0464, loss_rpn_bbox: 0.0576, loss_cls: 0.2041, loss_bbox: 0.2137, acc: 92.4727, loss_meta_cls: 0.0413, meta_acc: 80.2667, loss: 0.5631
+2024-12-21 19:36:22,193 - mmfewshot - INFO - Iter [8150/18000]	lr: 5.000e-03, eta: 1:20:12, time: 0.478, data_time: 0.073, memory: 9779, loss_rpn_cls: 0.0483, loss_rpn_bbox: 0.0552, loss_cls: 0.2138, loss_bbox: 0.2072, acc: 92.1719, loss_meta_cls: 0.0452, meta_acc: 78.5333, loss: 0.5696
+2024-12-21 19:36:44,266 - mmfewshot - INFO - Iter [8200/18000]	lr: 5.000e-03, eta: 1:19:45, time: 0.441, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0512, loss_rpn_bbox: 0.0501, loss_cls: 0.2087, loss_bbox: 0.2064, acc: 92.4844, loss_meta_cls: 0.0419, meta_acc: 78.6667, loss: 0.5583
+2024-12-21 19:37:06,761 - mmfewshot - INFO - Iter [8250/18000]	lr: 5.000e-03, eta: 1:19:18, time: 0.450, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0473, loss_rpn_bbox: 0.0555, loss_cls: 0.2153, loss_bbox: 0.1976, acc: 92.2539, loss_meta_cls: 0.0466, meta_acc: 76.9333, loss: 0.5624
+2024-12-21 19:37:29,382 - mmfewshot - INFO - Iter [8300/18000]	lr: 5.000e-03, eta: 1:18:52, time: 0.452, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0437, loss_rpn_bbox: 0.0541, loss_cls: 0.2088, loss_bbox: 0.1935, acc: 92.1055, loss_meta_cls: 0.0422, meta_acc: 79.8667, loss: 0.5422
+2024-12-21 19:37:52,006 - mmfewshot - INFO - Iter [8350/18000]	lr: 5.000e-03, eta: 1:18:25, time: 0.453, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0594, loss_rpn_bbox: 0.0588, loss_cls: 0.2146, loss_bbox: 0.2119, acc: 92.1992, loss_meta_cls: 0.0367, meta_acc: 81.6000, loss: 0.5814
+2024-12-21 19:38:14,423 - mmfewshot - INFO - Iter [8400/18000]	lr: 5.000e-03, eta: 1:17:58, time: 0.448, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0528, loss_rpn_bbox: 0.0580, loss_cls: 0.1997, loss_bbox: 0.2126, acc: 92.6484, loss_meta_cls: 0.0356, meta_acc: 82.5333, loss: 0.5587
+2024-12-21 19:38:36,901 - mmfewshot - INFO - Iter [8450/18000]	lr: 5.000e-03, eta: 1:17:32, time: 0.450, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0587, loss_rpn_bbox: 0.0625, loss_cls: 0.2002, loss_bbox: 0.2051, acc: 92.9688, loss_meta_cls: 0.0323, meta_acc: 84.8000, loss: 0.5589
+2024-12-21 19:38:58,755 - mmfewshot - INFO - Iter [8500/18000]	lr: 5.000e-03, eta: 1:17:05, time: 0.437, data_time: 0.035, memory: 9779, loss_rpn_cls: 0.0569, loss_rpn_bbox: 0.0686, loss_cls: 0.2022, loss_bbox: 0.2120, acc: 92.6953, loss_meta_cls: 0.0323, meta_acc: 84.9333, loss: 0.5720
+2024-12-21 19:39:21,277 - mmfewshot - INFO - Iter [8550/18000]	lr: 5.000e-03, eta: 1:16:38, time: 0.450, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0488, loss_rpn_bbox: 0.0585, loss_cls: 0.1974, loss_bbox: 0.2072, acc: 93.0078, loss_meta_cls: 0.0357, meta_acc: 82.2667, loss: 0.5475
+2024-12-21 19:39:43,444 - mmfewshot - INFO - Iter [8600/18000]	lr: 5.000e-03, eta: 1:16:12, time: 0.444, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0640, loss_rpn_bbox: 0.0585, loss_cls: 0.2144, loss_bbox: 0.2182, acc: 92.1250, loss_meta_cls: 0.0362, meta_acc: 82.9333, loss: 0.5913
+2024-12-21 19:40:05,601 - mmfewshot - INFO - Iter [8650/18000]	lr: 5.000e-03, eta: 1:15:45, time: 0.443, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0551, loss_rpn_bbox: 0.0551, loss_cls: 0.2143, loss_bbox: 0.2129, acc: 92.3242, loss_meta_cls: 0.0336, meta_acc: 83.3333, loss: 0.5710
+2024-12-21 19:40:27,913 - mmfewshot - INFO - Iter [8700/18000]	lr: 5.000e-03, eta: 1:15:19, time: 0.446, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0587, loss_rpn_bbox: 0.0592, loss_cls: 0.2184, loss_bbox: 0.2110, acc: 92.1250, loss_meta_cls: 0.0385, meta_acc: 81.4667, loss: 0.5858
+2024-12-21 19:40:50,237 - mmfewshot - INFO - Iter [8750/18000]	lr: 5.000e-03, eta: 1:14:52, time: 0.446, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0455, loss_rpn_bbox: 0.0613, loss_cls: 0.2208, loss_bbox: 0.2012, acc: 92.0156, loss_meta_cls: 0.0476, meta_acc: 75.2000, loss: 0.5765
+2024-12-21 19:41:12,481 - mmfewshot - INFO - Iter [8800/18000]	lr: 5.000e-03, eta: 1:14:26, time: 0.445, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0394, loss_rpn_bbox: 0.0555, loss_cls: 0.1890, loss_bbox: 0.1843, acc: 93.6914, loss_meta_cls: 0.0370, meta_acc: 80.9333, loss: 0.5052
+2024-12-21 19:41:34,476 - mmfewshot - INFO - Iter [8850/18000]	lr: 5.000e-03, eta: 1:13:59, time: 0.440, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0520, loss_rpn_bbox: 0.0572, loss_cls: 0.1872, loss_bbox: 0.2010, acc: 93.0508, loss_meta_cls: 0.0387, meta_acc: 80.9333, loss: 0.5361
+2024-12-21 19:41:56,734 - mmfewshot - INFO - Iter [8900/18000]	lr: 5.000e-03, eta: 1:13:33, time: 0.445, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0507, loss_rpn_bbox: 0.0666, loss_cls: 0.2251, loss_bbox: 0.2094, acc: 91.7422, loss_meta_cls: 0.0378, meta_acc: 81.8667, loss: 0.5897
+2024-12-21 19:42:19,189 - mmfewshot - INFO - Iter [8950/18000]	lr: 5.000e-03, eta: 1:13:07, time: 0.449, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0446, loss_rpn_bbox: 0.0480, loss_cls: 0.1856, loss_bbox: 0.1874, acc: 92.9766, loss_meta_cls: 0.0364, meta_acc: 82.2667, loss: 0.5021
+2024-12-21 19:42:41,323 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 19:42:41,324 - mmfewshot - INFO - Iter [9000/18000]	lr: 5.000e-03, eta: 1:12:40, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0551, loss_rpn_bbox: 0.0645, loss_cls: 0.2231, loss_bbox: 0.2159, acc: 91.8594, loss_meta_cls: 0.0392, meta_acc: 80.2667, loss: 0.5978
+2024-12-21 19:43:03,651 - mmfewshot - INFO - Iter [9050/18000]	lr: 5.000e-03, eta: 1:12:14, time: 0.447, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0583, loss_rpn_bbox: 0.0623, loss_cls: 0.2161, loss_bbox: 0.2062, acc: 92.6484, loss_meta_cls: 0.0311, meta_acc: 85.4667, loss: 0.5740
+2024-12-21 19:43:26,319 - mmfewshot - INFO - Iter [9100/18000]	lr: 5.000e-03, eta: 1:11:49, time: 0.453, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0517, loss_rpn_bbox: 0.0618, loss_cls: 0.2178, loss_bbox: 0.2062, acc: 92.1914, loss_meta_cls: 0.0291, meta_acc: 87.0667, loss: 0.5665
+2024-12-21 19:43:48,871 - mmfewshot - INFO - Iter [9150/18000]	lr: 5.000e-03, eta: 1:11:23, time: 0.451, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0526, loss_rpn_bbox: 0.0609, loss_cls: 0.2143, loss_bbox: 0.2052, acc: 92.0469, loss_meta_cls: 0.0288, meta_acc: 87.4667, loss: 0.5618
+2024-12-21 19:44:11,446 - mmfewshot - INFO - Iter [9200/18000]	lr: 5.000e-03, eta: 1:10:57, time: 0.452, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0527, loss_rpn_bbox: 0.0675, loss_cls: 0.2108, loss_bbox: 0.1887, acc: 92.1719, loss_meta_cls: 0.0317, meta_acc: 85.3333, loss: 0.5514
+2024-12-21 19:44:33,631 - mmfewshot - INFO - Iter [9250/18000]	lr: 5.000e-03, eta: 1:10:31, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0560, loss_rpn_bbox: 0.0583, loss_cls: 0.2180, loss_bbox: 0.1981, acc: 91.9727, loss_meta_cls: 0.0347, meta_acc: 82.8000, loss: 0.5650
+2024-12-21 19:44:56,041 - mmfewshot - INFO - Iter [9300/18000]	lr: 5.000e-03, eta: 1:10:05, time: 0.448, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0408, loss_rpn_bbox: 0.0562, loss_cls: 0.1901, loss_bbox: 0.1982, acc: 93.2812, loss_meta_cls: 0.0326, meta_acc: 84.6667, loss: 0.5180
+2024-12-21 19:45:18,346 - mmfewshot - INFO - Iter [9350/18000]	lr: 5.000e-03, eta: 1:09:39, time: 0.446, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0456, loss_rpn_bbox: 0.0598, loss_cls: 0.2069, loss_bbox: 0.2085, acc: 92.3711, loss_meta_cls: 0.0320, meta_acc: 84.9333, loss: 0.5528
+2024-12-21 19:45:39,889 - mmfewshot - INFO - Iter [9400/18000]	lr: 5.000e-03, eta: 1:09:13, time: 0.431, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0401, loss_rpn_bbox: 0.0509, loss_cls: 0.1813, loss_bbox: 0.1912, acc: 93.5273, loss_meta_cls: 0.0438, meta_acc: 77.8667, loss: 0.5074
+2024-12-21 19:46:01,885 - mmfewshot - INFO - Iter [9450/18000]	lr: 5.000e-03, eta: 1:08:47, time: 0.440, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0458, loss_rpn_bbox: 0.0607, loss_cls: 0.1903, loss_bbox: 0.2050, acc: 93.0078, loss_meta_cls: 0.0394, meta_acc: 81.4667, loss: 0.5414
+2024-12-21 19:46:24,290 - mmfewshot - INFO - Iter [9500/18000]	lr: 5.000e-03, eta: 1:08:21, time: 0.448, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0510, loss_rpn_bbox: 0.0570, loss_cls: 0.1841, loss_bbox: 0.1970, acc: 93.6523, loss_meta_cls: 0.0268, meta_acc: 86.9333, loss: 0.5159
+2024-12-21 19:46:46,283 - mmfewshot - INFO - Iter [9550/18000]	lr: 5.000e-03, eta: 1:07:55, time: 0.440, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0492, loss_rpn_bbox: 0.0474, loss_cls: 0.1943, loss_bbox: 0.1874, acc: 93.0508, loss_meta_cls: 0.0324, meta_acc: 83.8667, loss: 0.5107
+2024-12-21 19:47:08,404 - mmfewshot - INFO - Iter [9600/18000]	lr: 5.000e-03, eta: 1:07:29, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0523, loss_rpn_bbox: 0.0625, loss_cls: 0.2056, loss_bbox: 0.2039, acc: 92.4844, loss_meta_cls: 0.0267, meta_acc: 87.6000, loss: 0.5510
+2024-12-21 19:47:30,896 - mmfewshot - INFO - Iter [9650/18000]	lr: 5.000e-03, eta: 1:07:04, time: 0.449, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0530, loss_rpn_bbox: 0.0549, loss_cls: 0.2341, loss_bbox: 0.2258, acc: 91.8516, loss_meta_cls: 0.0257, meta_acc: 88.4000, loss: 0.5934
+2024-12-21 19:47:53,108 - mmfewshot - INFO - Iter [9700/18000]	lr: 5.000e-03, eta: 1:06:38, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0556, loss_rpn_bbox: 0.0575, loss_cls: 0.2048, loss_bbox: 0.2023, acc: 92.8359, loss_meta_cls: 0.0238, meta_acc: 90.2667, loss: 0.5440
+2024-12-21 19:48:15,140 - mmfewshot - INFO - Iter [9750/18000]	lr: 5.000e-03, eta: 1:06:12, time: 0.441, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0534, loss_rpn_bbox: 0.0595, loss_cls: 0.2014, loss_bbox: 0.1971, acc: 92.9062, loss_meta_cls: 0.0234, meta_acc: 88.0000, loss: 0.5349
+2024-12-21 19:48:37,658 - mmfewshot - INFO - Iter [9800/18000]	lr: 5.000e-03, eta: 1:05:47, time: 0.450, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0491, loss_rpn_bbox: 0.0595, loss_cls: 0.1821, loss_bbox: 0.1904, acc: 93.1367, loss_meta_cls: 0.0261, meta_acc: 88.0000, loss: 0.5072
+2024-12-21 19:48:59,757 - mmfewshot - INFO - Iter [9850/18000]	lr: 5.000e-03, eta: 1:05:21, time: 0.442, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0557, loss_rpn_bbox: 0.0597, loss_cls: 0.2142, loss_bbox: 0.2055, acc: 92.3711, loss_meta_cls: 0.0290, meta_acc: 86.9333, loss: 0.5641
+2024-12-21 19:49:22,369 - mmfewshot - INFO - Iter [9900/18000]	lr: 5.000e-03, eta: 1:04:56, time: 0.452, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0550, loss_rpn_bbox: 0.0611, loss_cls: 0.2122, loss_bbox: 0.2134, acc: 92.3555, loss_meta_cls: 0.0342, meta_acc: 84.6667, loss: 0.5759
+2024-12-21 19:49:44,939 - mmfewshot - INFO - Iter [9950/18000]	lr: 5.000e-03, eta: 1:04:30, time: 0.451, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0475, loss_rpn_bbox: 0.0603, loss_cls: 0.1833, loss_bbox: 0.1841, acc: 93.0820, loss_meta_cls: 0.0250, meta_acc: 87.6000, loss: 0.5002
+2024-12-21 19:50:07,047 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 19:50:07,048 - mmfewshot - INFO - Iter [10000/18000]	lr: 5.000e-03, eta: 1:04:05, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0581, loss_rpn_bbox: 0.0576, loss_cls: 0.2153, loss_bbox: 0.2088, acc: 92.5586, loss_meta_cls: 0.0243, meta_acc: 88.9333, loss: 0.5642
+2024-12-21 19:50:29,465 - mmfewshot - INFO - Iter [10050/18000]	lr: 5.000e-03, eta: 1:03:40, time: 0.448, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0560, loss_rpn_bbox: 0.0569, loss_cls: 0.2186, loss_bbox: 0.2189, acc: 91.8203, loss_meta_cls: 0.0217, meta_acc: 91.0667, loss: 0.5722
+2024-12-21 19:50:51,845 - mmfewshot - INFO - Iter [10100/18000]	lr: 5.000e-03, eta: 1:03:14, time: 0.448, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0434, loss_rpn_bbox: 0.0514, loss_cls: 0.1863, loss_bbox: 0.1917, acc: 92.9492, loss_meta_cls: 0.0207, meta_acc: 91.3333, loss: 0.4936
+2024-12-21 19:51:14,211 - mmfewshot - INFO - Iter [10150/18000]	lr: 5.000e-03, eta: 1:02:49, time: 0.447, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0540, loss_rpn_bbox: 0.0543, loss_cls: 0.2278, loss_bbox: 0.2119, acc: 91.7031, loss_meta_cls: 0.0288, meta_acc: 86.0000, loss: 0.5768
+2024-12-21 19:51:36,058 - mmfewshot - INFO - Iter [10200/18000]	lr: 5.000e-03, eta: 1:02:23, time: 0.437, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0515, loss_rpn_bbox: 0.0570, loss_cls: 0.1988, loss_bbox: 0.1942, acc: 92.7930, loss_meta_cls: 0.0437, meta_acc: 80.1333, loss: 0.5451
+2024-12-21 19:51:58,219 - mmfewshot - INFO - Iter [10250/18000]	lr: 5.000e-03, eta: 1:01:58, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0476, loss_rpn_bbox: 0.0570, loss_cls: 0.1987, loss_bbox: 0.1906, acc: 92.8125, loss_meta_cls: 0.0259, meta_acc: 88.9333, loss: 0.5197
+2024-12-21 19:52:20,148 - mmfewshot - INFO - Iter [10300/18000]	lr: 5.000e-03, eta: 1:01:32, time: 0.439, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0533, loss_rpn_bbox: 0.0568, loss_cls: 0.1916, loss_bbox: 0.1957, acc: 92.9844, loss_meta_cls: 0.0311, meta_acc: 85.0667, loss: 0.5286
+2024-12-21 19:52:42,321 - mmfewshot - INFO - Iter [10350/18000]	lr: 5.000e-03, eta: 1:01:07, time: 0.443, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0506, loss_rpn_bbox: 0.0605, loss_cls: 0.2014, loss_bbox: 0.1947, acc: 92.9258, loss_meta_cls: 0.0233, meta_acc: 89.8667, loss: 0.5306
+2024-12-21 19:53:04,906 - mmfewshot - INFO - Iter [10400/18000]	lr: 5.000e-03, eta: 1:00:42, time: 0.452, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0430, loss_rpn_bbox: 0.0509, loss_cls: 0.1784, loss_bbox: 0.1752, acc: 93.5820, loss_meta_cls: 0.0190, meta_acc: 92.5333, loss: 0.4665
+2024-12-21 19:53:27,426 - mmfewshot - INFO - Iter [10450/18000]	lr: 5.000e-03, eta: 1:00:17, time: 0.450, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0516, loss_rpn_bbox: 0.0636, loss_cls: 0.2031, loss_bbox: 0.2018, acc: 92.8672, loss_meta_cls: 0.0180, meta_acc: 93.0667, loss: 0.5380
+2024-12-21 19:53:49,546 - mmfewshot - INFO - Iter [10500/18000]	lr: 5.000e-03, eta: 0:59:52, time: 0.442, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0435, loss_rpn_bbox: 0.0558, loss_cls: 0.1930, loss_bbox: 0.1924, acc: 93.0156, loss_meta_cls: 0.0210, meta_acc: 89.6000, loss: 0.5057
+2024-12-21 19:54:11,747 - mmfewshot - INFO - Iter [10550/18000]	lr: 5.000e-03, eta: 0:59:27, time: 0.444, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0522, loss_rpn_bbox: 0.0588, loss_cls: 0.2010, loss_bbox: 0.1864, acc: 92.9922, loss_meta_cls: 0.0183, meta_acc: 92.2667, loss: 0.5168
+2024-12-21 19:54:34,099 - mmfewshot - INFO - Iter [10600/18000]	lr: 5.000e-03, eta: 0:59:02, time: 0.447, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0525, loss_rpn_bbox: 0.0658, loss_cls: 0.2014, loss_bbox: 0.1898, acc: 92.9844, loss_meta_cls: 0.0221, meta_acc: 91.2000, loss: 0.5316
+2024-12-21 19:54:56,335 - mmfewshot - INFO - Iter [10650/18000]	lr: 5.000e-03, eta: 0:58:36, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0530, loss_rpn_bbox: 0.0559, loss_cls: 0.2029, loss_bbox: 0.2106, acc: 92.6562, loss_meta_cls: 0.0213, meta_acc: 91.2000, loss: 0.5436
+2024-12-21 19:55:19,192 - mmfewshot - INFO - Iter [10700/18000]	lr: 5.000e-03, eta: 0:58:12, time: 0.457, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0517, loss_rpn_bbox: 0.0561, loss_cls: 0.2104, loss_bbox: 0.1896, acc: 92.5273, loss_meta_cls: 0.0195, meta_acc: 91.2000, loss: 0.5272
+2024-12-21 19:55:42,015 - mmfewshot - INFO - Iter [10750/18000]	lr: 5.000e-03, eta: 0:57:47, time: 0.457, data_time: 0.041, memory: 9779, loss_rpn_cls: 0.0545, loss_rpn_bbox: 0.0638, loss_cls: 0.2050, loss_bbox: 0.1975, acc: 92.5352, loss_meta_cls: 0.0215, meta_acc: 90.1333, loss: 0.5423
+2024-12-21 19:56:04,248 - mmfewshot - INFO - Iter [10800/18000]	lr: 5.000e-03, eta: 0:57:22, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0570, loss_rpn_bbox: 0.0613, loss_cls: 0.1928, loss_bbox: 0.2005, acc: 93.1328, loss_meta_cls: 0.0201, meta_acc: 89.8667, loss: 0.5318
+2024-12-21 19:56:27,037 - mmfewshot - INFO - Iter [10850/18000]	lr: 5.000e-03, eta: 0:56:57, time: 0.456, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0519, loss_rpn_bbox: 0.0663, loss_cls: 0.2116, loss_bbox: 0.2008, acc: 92.3047, loss_meta_cls: 0.0228, meta_acc: 90.2667, loss: 0.5533
+2024-12-21 19:56:49,188 - mmfewshot - INFO - Iter [10900/18000]	lr: 5.000e-03, eta: 0:56:32, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0493, loss_rpn_bbox: 0.0567, loss_cls: 0.1921, loss_bbox: 0.1903, acc: 93.1367, loss_meta_cls: 0.0182, meta_acc: 90.9333, loss: 0.5066
+2024-12-21 19:57:11,255 - mmfewshot - INFO - Iter [10950/18000]	lr: 5.000e-03, eta: 0:56:07, time: 0.441, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0511, loss_rpn_bbox: 0.0616, loss_cls: 0.2194, loss_bbox: 0.2000, acc: 92.1562, loss_meta_cls: 0.0233, meta_acc: 89.6000, loss: 0.5555
+2024-12-21 19:57:33,822 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 19:57:33,822 - mmfewshot - INFO - Iter [11000/18000]	lr: 5.000e-03, eta: 0:55:43, time: 0.452, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0475, loss_rpn_bbox: 0.0574, loss_cls: 0.1996, loss_bbox: 0.1975, acc: 92.6719, loss_meta_cls: 0.0207, meta_acc: 90.1333, loss: 0.5227
+2024-12-21 19:57:55,787 - mmfewshot - INFO - Iter [11050/18000]	lr: 5.000e-03, eta: 0:55:18, time: 0.439, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0404, loss_rpn_bbox: 0.0520, loss_cls: 0.1678, loss_bbox: 0.1846, acc: 93.7266, loss_meta_cls: 0.0219, meta_acc: 88.4000, loss: 0.4667
+2024-12-21 19:58:17,983 - mmfewshot - INFO - Iter [11100/18000]	lr: 5.000e-03, eta: 0:54:53, time: 0.444, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0445, loss_rpn_bbox: 0.0609, loss_cls: 0.1796, loss_bbox: 0.1879, acc: 93.7695, loss_meta_cls: 0.0146, meta_acc: 94.8000, loss: 0.4875
+2024-12-21 19:58:40,137 - mmfewshot - INFO - Iter [11150/18000]	lr: 5.000e-03, eta: 0:54:28, time: 0.443, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0392, loss_rpn_bbox: 0.0549, loss_cls: 0.1517, loss_bbox: 0.1745, acc: 94.5859, loss_meta_cls: 0.0133, meta_acc: 95.2000, loss: 0.4335
+2024-12-21 19:59:02,010 - mmfewshot - INFO - Iter [11200/18000]	lr: 5.000e-03, eta: 0:54:03, time: 0.438, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0521, loss_rpn_bbox: 0.0551, loss_cls: 0.1832, loss_bbox: 0.1914, acc: 93.2344, loss_meta_cls: 0.0183, meta_acc: 92.0000, loss: 0.5001
+2024-12-21 19:59:24,340 - mmfewshot - INFO - Iter [11250/18000]	lr: 5.000e-03, eta: 0:53:38, time: 0.446, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0438, loss_rpn_bbox: 0.0547, loss_cls: 0.1780, loss_bbox: 0.1818, acc: 93.3906, loss_meta_cls: 0.0133, meta_acc: 95.0667, loss: 0.4716
+2024-12-21 19:59:46,700 - mmfewshot - INFO - Iter [11300/18000]	lr: 5.000e-03, eta: 0:53:13, time: 0.448, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0441, loss_rpn_bbox: 0.0493, loss_cls: 0.1847, loss_bbox: 0.2021, acc: 93.0859, loss_meta_cls: 0.0156, meta_acc: 93.3333, loss: 0.4957
+2024-12-21 20:00:09,298 - mmfewshot - INFO - Iter [11350/18000]	lr: 5.000e-03, eta: 0:52:49, time: 0.451, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0436, loss_rpn_bbox: 0.0537, loss_cls: 0.1886, loss_bbox: 0.1718, acc: 92.9727, loss_meta_cls: 0.0128, meta_acc: 94.6667, loss: 0.4705
+2024-12-21 20:00:31,520 - mmfewshot - INFO - Iter [11400/18000]	lr: 5.000e-03, eta: 0:52:24, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0411, loss_rpn_bbox: 0.0624, loss_cls: 0.1777, loss_bbox: 0.1770, acc: 93.3516, loss_meta_cls: 0.0112, meta_acc: 95.6000, loss: 0.4693
+2024-12-21 20:00:53,698 - mmfewshot - INFO - Iter [11450/18000]	lr: 5.000e-03, eta: 0:51:59, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0509, loss_rpn_bbox: 0.0624, loss_cls: 0.1907, loss_bbox: 0.1878, acc: 92.8984, loss_meta_cls: 0.0164, meta_acc: 92.8000, loss: 0.5082
+2024-12-21 20:01:16,088 - mmfewshot - INFO - Iter [11500/18000]	lr: 5.000e-03, eta: 0:51:34, time: 0.448, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0396, loss_rpn_bbox: 0.0556, loss_cls: 0.1654, loss_bbox: 0.1650, acc: 93.8125, loss_meta_cls: 0.0148, meta_acc: 92.9333, loss: 0.4405
+2024-12-21 20:01:39,066 - mmfewshot - INFO - Iter [11550/18000]	lr: 5.000e-03, eta: 0:51:10, time: 0.460, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0426, loss_rpn_bbox: 0.0531, loss_cls: 0.1748, loss_bbox: 0.1755, acc: 93.4023, loss_meta_cls: 0.0155, meta_acc: 92.6667, loss: 0.4615
+2024-12-21 20:02:01,698 - mmfewshot - INFO - Iter [11600/18000]	lr: 5.000e-03, eta: 0:50:46, time: 0.453, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0463, loss_rpn_bbox: 0.0606, loss_cls: 0.1898, loss_bbox: 0.1969, acc: 93.1289, loss_meta_cls: 0.0193, meta_acc: 90.5333, loss: 0.5129
+2024-12-21 20:02:23,187 - mmfewshot - INFO - Iter [11650/18000]	lr: 5.000e-03, eta: 0:50:21, time: 0.430, data_time: 0.035, memory: 9779, loss_rpn_cls: 0.0436, loss_rpn_bbox: 0.0553, loss_cls: 0.1699, loss_bbox: 0.1702, acc: 93.9062, loss_meta_cls: 0.0247, meta_acc: 88.8000, loss: 0.4637
+2024-12-21 20:02:45,460 - mmfewshot - INFO - Iter [11700/18000]	lr: 5.000e-03, eta: 0:49:56, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0392, loss_rpn_bbox: 0.0560, loss_cls: 0.1673, loss_bbox: 0.1760, acc: 93.8086, loss_meta_cls: 0.0188, meta_acc: 90.4000, loss: 0.4574
+2024-12-21 20:03:07,564 - mmfewshot - INFO - Iter [11750/18000]	lr: 5.000e-03, eta: 0:49:31, time: 0.442, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0448, loss_rpn_bbox: 0.0565, loss_cls: 0.1699, loss_bbox: 0.1964, acc: 93.6055, loss_meta_cls: 0.0159, meta_acc: 93.7333, loss: 0.4836
+2024-12-21 20:03:29,557 - mmfewshot - INFO - Iter [11800/18000]	lr: 5.000e-03, eta: 0:49:07, time: 0.440, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0435, loss_rpn_bbox: 0.0512, loss_cls: 0.1653, loss_bbox: 0.1889, acc: 93.9648, loss_meta_cls: 0.0131, meta_acc: 95.2000, loss: 0.4620
+2024-12-21 20:03:51,398 - mmfewshot - INFO - Iter [11850/18000]	lr: 5.000e-03, eta: 0:48:42, time: 0.437, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0451, loss_rpn_bbox: 0.0562, loss_cls: 0.1946, loss_bbox: 0.1888, acc: 93.0078, loss_meta_cls: 0.0136, meta_acc: 94.4000, loss: 0.4984
+2024-12-21 20:04:13,552 - mmfewshot - INFO - Iter [11900/18000]	lr: 5.000e-03, eta: 0:48:17, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0452, loss_rpn_bbox: 0.0616, loss_cls: 0.1659, loss_bbox: 0.1827, acc: 94.1016, loss_meta_cls: 0.0130, meta_acc: 94.4000, loss: 0.4682
+2024-12-21 20:04:35,694 - mmfewshot - INFO - Iter [11950/18000]	lr: 5.000e-03, eta: 0:47:53, time: 0.443, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0436, loss_rpn_bbox: 0.0560, loss_cls: 0.1769, loss_bbox: 0.2082, acc: 93.4766, loss_meta_cls: 0.0161, meta_acc: 93.3333, loss: 0.5008
+2024-12-21 20:04:58,152 - mmfewshot - INFO - Saving checkpoint at 12000 iterations
+2024-12-21 20:04:59,952 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 20:04:59,953 - mmfewshot - INFO - Iter [12000/18000]	lr: 5.000e-03, eta: 0:47:29, time: 0.486, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0431, loss_rpn_bbox: 0.0539, loss_cls: 0.1510, loss_bbox: 0.1621, acc: 94.6758, loss_meta_cls: 0.0162, meta_acc: 92.0000, loss: 0.4263
+2024-12-21 20:11:37,661 - mmfewshot - INFO - 
++-------------+------+-------+--------+-------+
+| class       | gts  | dets  | recall | ap    |
++-------------+------+-------+--------+-------+
+| aeroplane   | 285  | 1901  | 0.863  | 0.718 |
+| bicycle     | 337  | 1136  | 0.893  | 0.775 |
+| boat        | 263  | 1688  | 0.810  | 0.580 |
+| bottle      | 469  | 3711  | 0.806  | 0.615 |
+| car         | 1201 | 4282  | 0.913  | 0.830 |
+| cat         | 358  | 977   | 0.933  | 0.846 |
+| chair       | 756  | 11714 | 0.817  | 0.469 |
+| diningtable | 206  | 3379  | 0.879  | 0.656 |
+| dog         | 489  | 2160  | 0.918  | 0.780 |
+| horse       | 348  | 1975  | 0.931  | 0.790 |
+| person      | 4528 | 19271 | 0.887  | 0.771 |
+| pottedplant | 480  | 3936  | 0.731  | 0.410 |
+| sheep       | 242  | 2827  | 0.897  | 0.728 |
+| train       | 282  | 1888  | 0.933  | 0.789 |
+| tvmonitor   | 308  | 2718  | 0.903  | 0.764 |
++-------------+------+-------+--------+-------+
+| mAP         |      |       |        | 0.701 |
++-------------+------+-------+--------+-------+
+2024-12-21 20:11:37,691 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 20:11:37,692 - mmfewshot - INFO - Iter(val) [4952]	AP50: 0.7010, mAP: 0.7014
+2024-12-21 20:11:59,417 - mmfewshot - INFO - Iter [12050/18000]	lr: 5.000e-03, eta: 0:50:21, time: 8.388, data_time: 7.991, memory: 9779, loss_rpn_cls: 0.0446, loss_rpn_bbox: 0.0520, loss_cls: 0.1514, loss_bbox: 0.1642, acc: 94.5156, loss_meta_cls: 0.0197, meta_acc: 91.0667, loss: 0.4318
+2024-12-21 20:12:21,487 - mmfewshot - INFO - Iter [12100/18000]	lr: 5.000e-03, eta: 0:49:54, time: 0.441, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0451, loss_rpn_bbox: 0.0541, loss_cls: 0.1725, loss_bbox: 0.1863, acc: 93.6328, loss_meta_cls: 0.0158, meta_acc: 93.2000, loss: 0.4738
+2024-12-21 20:12:43,474 - mmfewshot - INFO - Iter [12150/18000]	lr: 5.000e-03, eta: 0:49:27, time: 0.440, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0413, loss_rpn_bbox: 0.0589, loss_cls: 0.1511, loss_bbox: 0.1672, acc: 94.2344, loss_meta_cls: 0.0085, meta_acc: 96.9333, loss: 0.4270
+2024-12-21 20:13:05,306 - mmfewshot - INFO - Iter [12200/18000]	lr: 5.000e-03, eta: 0:49:00, time: 0.437, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0530, loss_rpn_bbox: 0.0615, loss_cls: 0.1873, loss_bbox: 0.1892, acc: 93.1211, loss_meta_cls: 0.0112, meta_acc: 94.9333, loss: 0.5022
+2024-12-21 20:13:27,979 - mmfewshot - INFO - Iter [12250/18000]	lr: 5.000e-03, eta: 0:48:33, time: 0.453, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0537, loss_rpn_bbox: 0.0531, loss_cls: 0.2022, loss_bbox: 0.1815, acc: 92.5156, loss_meta_cls: 0.0161, meta_acc: 92.1333, loss: 0.5066
+2024-12-21 20:13:50,377 - mmfewshot - INFO - Iter [12300/18000]	lr: 5.000e-03, eta: 0:48:07, time: 0.448, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0397, loss_rpn_bbox: 0.0582, loss_cls: 0.1628, loss_bbox: 0.1582, acc: 93.9883, loss_meta_cls: 0.0129, meta_acc: 94.6667, loss: 0.4318
+2024-12-21 20:14:12,385 - mmfewshot - INFO - Iter [12350/18000]	lr: 5.000e-03, eta: 0:47:40, time: 0.440, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0528, loss_rpn_bbox: 0.0611, loss_cls: 0.1933, loss_bbox: 0.1859, acc: 92.7891, loss_meta_cls: 0.0167, meta_acc: 91.4667, loss: 0.5098
+2024-12-21 20:14:34,526 - mmfewshot - INFO - Iter [12400/18000]	lr: 5.000e-03, eta: 0:47:13, time: 0.443, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0419, loss_rpn_bbox: 0.0534, loss_cls: 0.1867, loss_bbox: 0.1764, acc: 92.9453, loss_meta_cls: 0.0132, meta_acc: 94.4000, loss: 0.4715
+2024-12-21 20:14:56,605 - mmfewshot - INFO - Iter [12450/18000]	lr: 5.000e-03, eta: 0:46:46, time: 0.442, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0506, loss_rpn_bbox: 0.0576, loss_cls: 0.1956, loss_bbox: 0.1910, acc: 92.9570, loss_meta_cls: 0.0159, meta_acc: 92.8000, loss: 0.5107
+2024-12-21 20:15:18,900 - mmfewshot - INFO - Iter [12500/18000]	lr: 5.000e-03, eta: 0:46:20, time: 0.446, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0475, loss_rpn_bbox: 0.0576, loss_cls: 0.1983, loss_bbox: 0.1826, acc: 92.7188, loss_meta_cls: 0.0163, meta_acc: 93.0667, loss: 0.5023
+2024-12-21 20:15:40,832 - mmfewshot - INFO - Iter [12550/18000]	lr: 5.000e-03, eta: 0:45:53, time: 0.438, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0422, loss_rpn_bbox: 0.0528, loss_cls: 0.1896, loss_bbox: 0.1856, acc: 92.9805, loss_meta_cls: 0.0167, meta_acc: 92.2667, loss: 0.4870
+2024-12-21 20:16:02,968 - mmfewshot - INFO - Iter [12600/18000]	lr: 5.000e-03, eta: 0:45:26, time: 0.443, data_time: 0.041, memory: 9779, loss_rpn_cls: 0.0451, loss_rpn_bbox: 0.0595, loss_cls: 0.2091, loss_bbox: 0.1897, acc: 92.4688, loss_meta_cls: 0.0147, meta_acc: 92.9333, loss: 0.5182
+2024-12-21 20:16:25,050 - mmfewshot - INFO - Iter [12650/18000]	lr: 5.000e-03, eta: 0:45:00, time: 0.442, data_time: 0.035, memory: 9779, loss_rpn_cls: 0.0585, loss_rpn_bbox: 0.0636, loss_cls: 0.2072, loss_bbox: 0.1954, acc: 92.2969, loss_meta_cls: 0.0116, meta_acc: 94.8000, loss: 0.5362
+2024-12-21 20:16:47,503 - mmfewshot - INFO - Iter [12700/18000]	lr: 5.000e-03, eta: 0:44:33, time: 0.449, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0439, loss_rpn_bbox: 0.0511, loss_cls: 0.1946, loss_bbox: 0.1806, acc: 92.8750, loss_meta_cls: 0.0127, meta_acc: 94.1333, loss: 0.4829
+2024-12-21 20:17:09,670 - mmfewshot - INFO - Iter [12750/18000]	lr: 5.000e-03, eta: 0:44:07, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0453, loss_rpn_bbox: 0.0604, loss_cls: 0.1771, loss_bbox: 0.1721, acc: 93.3477, loss_meta_cls: 0.0072, meta_acc: 97.7333, loss: 0.4621
+2024-12-21 20:17:31,902 - mmfewshot - INFO - Iter [12800/18000]	lr: 5.000e-03, eta: 0:43:40, time: 0.445, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0527, loss_rpn_bbox: 0.0525, loss_cls: 0.1693, loss_bbox: 0.1757, acc: 93.8164, loss_meta_cls: 0.0110, meta_acc: 95.2000, loss: 0.4613
+2024-12-21 20:17:53,839 - mmfewshot - INFO - Iter [12850/18000]	lr: 5.000e-03, eta: 0:43:14, time: 0.439, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0476, loss_rpn_bbox: 0.0578, loss_cls: 0.1631, loss_bbox: 0.1739, acc: 94.0117, loss_meta_cls: 0.0118, meta_acc: 94.8000, loss: 0.4541
+2024-12-21 20:18:15,898 - mmfewshot - INFO - Iter [12900/18000]	lr: 5.000e-03, eta: 0:42:47, time: 0.441, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0485, loss_rpn_bbox: 0.0613, loss_cls: 0.1932, loss_bbox: 0.2027, acc: 93.2773, loss_meta_cls: 0.0092, meta_acc: 95.8667, loss: 0.5149
+2024-12-21 20:18:38,014 - mmfewshot - INFO - Iter [12950/18000]	lr: 5.000e-03, eta: 0:42:21, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0403, loss_rpn_bbox: 0.0547, loss_cls: 0.1820, loss_bbox: 0.1890, acc: 93.5820, loss_meta_cls: 0.0079, meta_acc: 96.6667, loss: 0.4740
+2024-12-21 20:19:00,337 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 20:19:00,337 - mmfewshot - INFO - Iter [13000/18000]	lr: 5.000e-03, eta: 0:41:55, time: 0.446, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0491, loss_rpn_bbox: 0.0543, loss_cls: 0.1819, loss_bbox: 0.1819, acc: 93.4492, loss_meta_cls: 0.0092, meta_acc: 96.5333, loss: 0.4765
+2024-12-21 20:19:23,131 - mmfewshot - INFO - Iter [13050/18000]	lr: 5.000e-03, eta: 0:41:29, time: 0.456, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0504, loss_rpn_bbox: 0.0598, loss_cls: 0.1866, loss_bbox: 0.1861, acc: 93.1250, loss_meta_cls: 0.0102, meta_acc: 96.1333, loss: 0.4931
+2024-12-21 20:19:45,514 - mmfewshot - INFO - Iter [13100/18000]	lr: 5.000e-03, eta: 0:41:03, time: 0.447, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0453, loss_rpn_bbox: 0.0576, loss_cls: 0.1824, loss_bbox: 0.1738, acc: 93.2578, loss_meta_cls: 0.0062, meta_acc: 97.6000, loss: 0.4653
+2024-12-21 20:20:07,839 - mmfewshot - INFO - Iter [13150/18000]	lr: 5.000e-03, eta: 0:40:36, time: 0.447, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0418, loss_rpn_bbox: 0.0520, loss_cls: 0.1905, loss_bbox: 0.1828, acc: 93.0664, loss_meta_cls: 0.0077, meta_acc: 97.0667, loss: 0.4748
+2024-12-21 20:20:29,836 - mmfewshot - INFO - Iter [13200/18000]	lr: 5.000e-03, eta: 0:40:10, time: 0.440, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0480, loss_rpn_bbox: 0.0533, loss_cls: 0.1847, loss_bbox: 0.1799, acc: 93.0156, loss_meta_cls: 0.0105, meta_acc: 95.2000, loss: 0.4764
+2024-12-21 20:20:52,162 - mmfewshot - INFO - Iter [13250/18000]	lr: 5.000e-03, eta: 0:39:44, time: 0.446, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0430, loss_rpn_bbox: 0.0610, loss_cls: 0.1792, loss_bbox: 0.1750, acc: 93.4141, loss_meta_cls: 0.0102, meta_acc: 95.4667, loss: 0.4686
+2024-12-21 20:21:13,954 - mmfewshot - INFO - Iter [13300/18000]	lr: 5.000e-03, eta: 0:39:18, time: 0.436, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0420, loss_rpn_bbox: 0.0619, loss_cls: 0.1703, loss_bbox: 0.1768, acc: 93.6406, loss_meta_cls: 0.0091, meta_acc: 96.9333, loss: 0.4601
+2024-12-21 20:21:36,076 - mmfewshot - INFO - Iter [13350/18000]	lr: 5.000e-03, eta: 0:38:52, time: 0.442, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0387, loss_rpn_bbox: 0.0516, loss_cls: 0.1592, loss_bbox: 0.1658, acc: 94.0195, loss_meta_cls: 0.0093, meta_acc: 96.6667, loss: 0.4246
+2024-12-21 20:21:58,091 - mmfewshot - INFO - Iter [13400/18000]	lr: 5.000e-03, eta: 0:38:26, time: 0.440, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0453, loss_rpn_bbox: 0.0623, loss_cls: 0.1965, loss_bbox: 0.1858, acc: 92.9492, loss_meta_cls: 0.0128, meta_acc: 94.6667, loss: 0.5027
+2024-12-21 20:22:20,165 - mmfewshot - INFO - Iter [13450/18000]	lr: 5.000e-03, eta: 0:37:59, time: 0.441, data_time: 0.035, memory: 9779, loss_rpn_cls: 0.0449, loss_rpn_bbox: 0.0529, loss_cls: 0.1812, loss_bbox: 0.1778, acc: 93.1992, loss_meta_cls: 0.0212, meta_acc: 90.1333, loss: 0.4780
+2024-12-21 20:22:41,943 - mmfewshot - INFO - Iter [13500/18000]	lr: 5.000e-03, eta: 0:37:33, time: 0.436, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0466, loss_rpn_bbox: 0.0555, loss_cls: 0.1864, loss_bbox: 0.1789, acc: 93.0820, loss_meta_cls: 0.0149, meta_acc: 93.4667, loss: 0.4823
+2024-12-21 20:23:03,776 - mmfewshot - INFO - Iter [13550/18000]	lr: 5.000e-03, eta: 0:37:07, time: 0.436, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0476, loss_rpn_bbox: 0.0585, loss_cls: 0.1962, loss_bbox: 0.1832, acc: 92.7266, loss_meta_cls: 0.0152, meta_acc: 93.2000, loss: 0.5008
+2024-12-21 20:23:25,969 - mmfewshot - INFO - Iter [13600/18000]	lr: 5.000e-03, eta: 0:36:41, time: 0.444, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0465, loss_rpn_bbox: 0.0617, loss_cls: 0.1847, loss_bbox: 0.1808, acc: 93.3008, loss_meta_cls: 0.0087, meta_acc: 96.5333, loss: 0.4825
+2024-12-21 20:23:48,044 - mmfewshot - INFO - Iter [13650/18000]	lr: 5.000e-03, eta: 0:36:15, time: 0.441, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0421, loss_rpn_bbox: 0.0577, loss_cls: 0.1891, loss_bbox: 0.1765, acc: 92.9883, loss_meta_cls: 0.0108, meta_acc: 94.8000, loss: 0.4762
+2024-12-21 20:24:09,951 - mmfewshot - INFO - Iter [13700/18000]	lr: 5.000e-03, eta: 0:35:49, time: 0.438, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0494, loss_rpn_bbox: 0.0581, loss_cls: 0.1740, loss_bbox: 0.1768, acc: 93.7383, loss_meta_cls: 0.0110, meta_acc: 95.3333, loss: 0.4693
+2024-12-21 20:24:31,750 - mmfewshot - INFO - Iter [13750/18000]	lr: 5.000e-03, eta: 0:35:23, time: 0.436, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0443, loss_rpn_bbox: 0.0481, loss_cls: 0.1813, loss_bbox: 0.1917, acc: 93.3203, loss_meta_cls: 0.0085, meta_acc: 96.6667, loss: 0.4738
+2024-12-21 20:24:53,912 - mmfewshot - INFO - Iter [13800/18000]	lr: 5.000e-03, eta: 0:34:58, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0505, loss_rpn_bbox: 0.0556, loss_cls: 0.2028, loss_bbox: 0.2022, acc: 92.4258, loss_meta_cls: 0.0094, meta_acc: 95.8667, loss: 0.5204
+2024-12-21 20:25:16,296 - mmfewshot - INFO - Iter [13850/18000]	lr: 5.000e-03, eta: 0:34:32, time: 0.448, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0459, loss_rpn_bbox: 0.0547, loss_cls: 0.1661, loss_bbox: 0.1678, acc: 93.8438, loss_meta_cls: 0.0172, meta_acc: 91.2000, loss: 0.4517
+2024-12-21 20:25:38,552 - mmfewshot - INFO - Iter [13900/18000]	lr: 5.000e-03, eta: 0:34:06, time: 0.445, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0495, loss_rpn_bbox: 0.0586, loss_cls: 0.1817, loss_bbox: 0.1838, acc: 93.3047, loss_meta_cls: 0.0110, meta_acc: 96.0000, loss: 0.4846
+2024-12-21 20:26:00,747 - mmfewshot - INFO - Iter [13950/18000]	lr: 5.000e-03, eta: 0:33:40, time: 0.444, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0411, loss_rpn_bbox: 0.0520, loss_cls: 0.1794, loss_bbox: 0.1843, acc: 93.5430, loss_meta_cls: 0.0160, meta_acc: 92.0000, loss: 0.4728
+2024-12-21 20:26:22,752 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 20:26:22,753 - mmfewshot - INFO - Iter [14000/18000]	lr: 5.000e-03, eta: 0:33:14, time: 0.440, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0421, loss_rpn_bbox: 0.0559, loss_cls: 0.1856, loss_bbox: 0.1737, acc: 93.1172, loss_meta_cls: 0.0144, meta_acc: 93.7333, loss: 0.4718
+2024-12-21 20:26:44,903 - mmfewshot - INFO - Iter [14050/18000]	lr: 5.000e-03, eta: 0:32:49, time: 0.443, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0432, loss_rpn_bbox: 0.0575, loss_cls: 0.1819, loss_bbox: 0.1742, acc: 93.5508, loss_meta_cls: 0.0150, meta_acc: 93.3333, loss: 0.4717
+2024-12-21 20:27:07,020 - mmfewshot - INFO - Iter [14100/18000]	lr: 5.000e-03, eta: 0:32:23, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0362, loss_rpn_bbox: 0.0479, loss_cls: 0.1654, loss_bbox: 0.1611, acc: 93.8594, loss_meta_cls: 0.0137, meta_acc: 94.1333, loss: 0.4243
+2024-12-21 20:27:29,274 - mmfewshot - INFO - Iter [14150/18000]	lr: 5.000e-03, eta: 0:31:57, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0451, loss_rpn_bbox: 0.0534, loss_cls: 0.1687, loss_bbox: 0.1740, acc: 93.6680, loss_meta_cls: 0.0137, meta_acc: 94.0000, loss: 0.4550
+2024-12-21 20:27:51,196 - mmfewshot - INFO - Iter [14200/18000]	lr: 5.000e-03, eta: 0:31:32, time: 0.439, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0394, loss_rpn_bbox: 0.0560, loss_cls: 0.1665, loss_bbox: 0.1691, acc: 94.0820, loss_meta_cls: 0.0100, meta_acc: 96.4000, loss: 0.4410
+2024-12-21 20:28:13,082 - mmfewshot - INFO - Iter [14250/18000]	lr: 5.000e-03, eta: 0:31:06, time: 0.437, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0349, loss_rpn_bbox: 0.0605, loss_cls: 0.1720, loss_bbox: 0.1890, acc: 93.6367, loss_meta_cls: 0.0073, meta_acc: 97.2000, loss: 0.4637
+2024-12-21 20:28:35,407 - mmfewshot - INFO - Iter [14300/18000]	lr: 5.000e-03, eta: 0:30:40, time: 0.446, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0443, loss_rpn_bbox: 0.0539, loss_cls: 0.1727, loss_bbox: 0.1828, acc: 93.4102, loss_meta_cls: 0.0130, meta_acc: 94.4000, loss: 0.4667
+2024-12-21 20:28:57,709 - mmfewshot - INFO - Iter [14350/18000]	lr: 5.000e-03, eta: 0:30:15, time: 0.446, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0491, loss_rpn_bbox: 0.0597, loss_cls: 0.1900, loss_bbox: 0.1968, acc: 92.7500, loss_meta_cls: 0.0105, meta_acc: 94.9333, loss: 0.5062
+2024-12-21 20:29:20,061 - mmfewshot - INFO - Iter [14400/18000]	lr: 5.000e-03, eta: 0:29:49, time: 0.447, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0493, loss_rpn_bbox: 0.0519, loss_cls: 0.1833, loss_bbox: 0.1899, acc: 93.0820, loss_meta_cls: 0.0070, meta_acc: 96.9333, loss: 0.4813
+2024-12-21 20:29:42,113 - mmfewshot - INFO - Iter [14450/18000]	lr: 5.000e-03, eta: 0:29:24, time: 0.441, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0432, loss_rpn_bbox: 0.0621, loss_cls: 0.1756, loss_bbox: 0.1834, acc: 93.7656, loss_meta_cls: 0.0091, meta_acc: 96.6667, loss: 0.4734
+2024-12-21 20:30:04,130 - mmfewshot - INFO - Iter [14500/18000]	lr: 5.000e-03, eta: 0:28:58, time: 0.441, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0560, loss_rpn_bbox: 0.0569, loss_cls: 0.1845, loss_bbox: 0.1876, acc: 93.2422, loss_meta_cls: 0.0111, meta_acc: 94.8000, loss: 0.4962
+2024-12-21 20:30:26,229 - mmfewshot - INFO - Iter [14550/18000]	lr: 5.000e-03, eta: 0:28:33, time: 0.442, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0440, loss_rpn_bbox: 0.0586, loss_cls: 0.1779, loss_bbox: 0.1840, acc: 93.4414, loss_meta_cls: 0.0068, meta_acc: 97.6000, loss: 0.4713
+2024-12-21 20:30:48,303 - mmfewshot - INFO - Iter [14600/18000]	lr: 5.000e-03, eta: 0:28:07, time: 0.441, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0474, loss_rpn_bbox: 0.0591, loss_cls: 0.1685, loss_bbox: 0.1642, acc: 93.5469, loss_meta_cls: 0.0046, meta_acc: 98.4000, loss: 0.4437
+2024-12-21 20:31:10,552 - mmfewshot - INFO - Iter [14650/18000]	lr: 5.000e-03, eta: 0:27:42, time: 0.445, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0409, loss_rpn_bbox: 0.0474, loss_cls: 0.1743, loss_bbox: 0.1767, acc: 93.5859, loss_meta_cls: 0.0065, meta_acc: 97.6000, loss: 0.4457
+2024-12-21 20:31:33,221 - mmfewshot - INFO - Iter [14700/18000]	lr: 5.000e-03, eta: 0:27:17, time: 0.453, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0342, loss_rpn_bbox: 0.0589, loss_cls: 0.1444, loss_bbox: 0.1480, acc: 94.7031, loss_meta_cls: 0.0040, meta_acc: 98.5333, loss: 0.3894
+2024-12-21 20:31:55,411 - mmfewshot - INFO - Iter [14750/18000]	lr: 5.000e-03, eta: 0:26:51, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0429, loss_rpn_bbox: 0.0535, loss_cls: 0.1616, loss_bbox: 0.1667, acc: 94.3125, loss_meta_cls: 0.0052, meta_acc: 98.2667, loss: 0.4299
+2024-12-21 20:32:17,738 - mmfewshot - INFO - Iter [14800/18000]	lr: 5.000e-03, eta: 0:26:26, time: 0.447, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0300, loss_rpn_bbox: 0.0474, loss_cls: 0.1377, loss_bbox: 0.1528, acc: 94.7578, loss_meta_cls: 0.0085, meta_acc: 96.4000, loss: 0.3764
+2024-12-21 20:32:40,016 - mmfewshot - INFO - Iter [14850/18000]	lr: 5.000e-03, eta: 0:26:01, time: 0.446, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0359, loss_rpn_bbox: 0.0572, loss_cls: 0.1412, loss_bbox: 0.1521, acc: 95.0156, loss_meta_cls: 0.0065, meta_acc: 97.0667, loss: 0.3930
+2024-12-21 20:33:02,260 - mmfewshot - INFO - Iter [14900/18000]	lr: 5.000e-03, eta: 0:25:35, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0314, loss_rpn_bbox: 0.0530, loss_cls: 0.1443, loss_bbox: 0.1621, acc: 94.7227, loss_meta_cls: 0.0055, meta_acc: 97.7333, loss: 0.3963
+2024-12-21 20:33:24,580 - mmfewshot - INFO - Iter [14950/18000]	lr: 5.000e-03, eta: 0:25:10, time: 0.446, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0410, loss_rpn_bbox: 0.0587, loss_cls: 0.1699, loss_bbox: 0.1718, acc: 93.9922, loss_meta_cls: 0.0042, meta_acc: 98.1333, loss: 0.4455
+2024-12-21 20:33:46,908 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 20:33:46,909 - mmfewshot - INFO - Iter [15000/18000]	lr: 5.000e-03, eta: 0:24:45, time: 0.447, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0453, loss_rpn_bbox: 0.0529, loss_cls: 0.1668, loss_bbox: 0.1719, acc: 93.9883, loss_meta_cls: 0.0045, meta_acc: 98.1333, loss: 0.4414
+2024-12-21 20:34:09,115 - mmfewshot - INFO - Iter [15050/18000]	lr: 5.000e-03, eta: 0:24:20, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0480, loss_rpn_bbox: 0.0569, loss_cls: 0.1694, loss_bbox: 0.1720, acc: 93.8047, loss_meta_cls: 0.0050, meta_acc: 98.4000, loss: 0.4513
+2024-12-21 20:34:31,176 - mmfewshot - INFO - Iter [15100/18000]	lr: 5.000e-03, eta: 0:23:54, time: 0.441, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0452, loss_rpn_bbox: 0.0569, loss_cls: 0.1589, loss_bbox: 0.1654, acc: 94.0742, loss_meta_cls: 0.0055, meta_acc: 98.1333, loss: 0.4320
+2024-12-21 20:34:53,188 - mmfewshot - INFO - Iter [15150/18000]	lr: 5.000e-03, eta: 0:23:29, time: 0.440, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0411, loss_rpn_bbox: 0.0508, loss_cls: 0.1786, loss_bbox: 0.1736, acc: 93.5352, loss_meta_cls: 0.0070, meta_acc: 97.3333, loss: 0.4511
+2024-12-21 20:35:15,415 - mmfewshot - INFO - Iter [15200/18000]	lr: 5.000e-03, eta: 0:23:04, time: 0.445, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0364, loss_rpn_bbox: 0.0536, loss_cls: 0.1610, loss_bbox: 0.1774, acc: 94.2188, loss_meta_cls: 0.0078, meta_acc: 96.4000, loss: 0.4361
+2024-12-21 20:35:37,415 - mmfewshot - INFO - Iter [15250/18000]	lr: 5.000e-03, eta: 0:22:39, time: 0.440, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0513, loss_rpn_bbox: 0.0547, loss_cls: 0.1657, loss_bbox: 0.1867, acc: 93.7812, loss_meta_cls: 0.0091, meta_acc: 96.1333, loss: 0.4674
+2024-12-21 20:35:59,613 - mmfewshot - INFO - Iter [15300/18000]	lr: 5.000e-03, eta: 0:22:13, time: 0.444, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0384, loss_rpn_bbox: 0.0536, loss_cls: 0.1618, loss_bbox: 0.1716, acc: 93.9375, loss_meta_cls: 0.0056, meta_acc: 97.8667, loss: 0.4309
+2024-12-21 20:36:21,782 - mmfewshot - INFO - Iter [15350/18000]	lr: 5.000e-03, eta: 0:21:48, time: 0.443, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0356, loss_rpn_bbox: 0.0549, loss_cls: 0.1430, loss_bbox: 0.1596, acc: 94.5391, loss_meta_cls: 0.0051, meta_acc: 98.1333, loss: 0.3983
+2024-12-21 20:36:44,347 - mmfewshot - INFO - Iter [15400/18000]	lr: 5.000e-03, eta: 0:21:23, time: 0.451, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0415, loss_rpn_bbox: 0.0577, loss_cls: 0.1476, loss_bbox: 0.1618, acc: 94.5117, loss_meta_cls: 0.0042, meta_acc: 98.6667, loss: 0.4128
+2024-12-21 20:37:06,682 - mmfewshot - INFO - Iter [15450/18000]	lr: 5.000e-03, eta: 0:20:58, time: 0.447, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0414, loss_rpn_bbox: 0.0541, loss_cls: 0.1507, loss_bbox: 0.1623, acc: 94.1992, loss_meta_cls: 0.0034, meta_acc: 99.2000, loss: 0.4119
+2024-12-21 20:37:29,039 - mmfewshot - INFO - Iter [15500/18000]	lr: 5.000e-03, eta: 0:20:33, time: 0.447, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0431, loss_rpn_bbox: 0.0650, loss_cls: 0.1541, loss_bbox: 0.1584, acc: 94.4375, loss_meta_cls: 0.0038, meta_acc: 99.0667, loss: 0.4244
+2024-12-21 20:37:51,491 - mmfewshot - INFO - Iter [15550/18000]	lr: 5.000e-03, eta: 0:20:08, time: 0.449, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0363, loss_rpn_bbox: 0.0514, loss_cls: 0.1542, loss_bbox: 0.1683, acc: 94.3281, loss_meta_cls: 0.0044, meta_acc: 98.4000, loss: 0.4146
+2024-12-21 20:38:13,780 - mmfewshot - INFO - Iter [15600/18000]	lr: 5.000e-03, eta: 0:19:43, time: 0.446, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0364, loss_rpn_bbox: 0.0590, loss_cls: 0.1457, loss_bbox: 0.1637, acc: 94.5742, loss_meta_cls: 0.0066, meta_acc: 97.3333, loss: 0.4114
+2024-12-21 20:38:35,872 - mmfewshot - INFO - Iter [15650/18000]	lr: 5.000e-03, eta: 0:19:18, time: 0.442, data_time: 0.035, memory: 9779, loss_rpn_cls: 0.0461, loss_rpn_bbox: 0.0542, loss_cls: 0.1562, loss_bbox: 0.1721, acc: 94.3047, loss_meta_cls: 0.0031, meta_acc: 98.9333, loss: 0.4317
+2024-12-21 20:38:58,120 - mmfewshot - INFO - Iter [15700/18000]	lr: 5.000e-03, eta: 0:18:53, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0417, loss_rpn_bbox: 0.0560, loss_cls: 0.1521, loss_bbox: 0.1671, acc: 94.3789, loss_meta_cls: 0.0052, meta_acc: 98.1333, loss: 0.4221
+2024-12-21 20:39:20,905 - mmfewshot - INFO - Iter [15750/18000]	lr: 5.000e-03, eta: 0:18:28, time: 0.456, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0310, loss_rpn_bbox: 0.0471, loss_cls: 0.1265, loss_bbox: 0.1480, acc: 95.2266, loss_meta_cls: 0.0054, meta_acc: 98.0000, loss: 0.3580
+2024-12-21 20:39:43,410 - mmfewshot - INFO - Iter [15800/18000]	lr: 5.000e-03, eta: 0:18:03, time: 0.450, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0452, loss_rpn_bbox: 0.0563, loss_cls: 0.1647, loss_bbox: 0.1710, acc: 93.8594, loss_meta_cls: 0.0039, meta_acc: 98.8000, loss: 0.4412
+2024-12-21 20:40:05,444 - mmfewshot - INFO - Iter [15850/18000]	lr: 5.000e-03, eta: 0:17:38, time: 0.441, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0437, loss_rpn_bbox: 0.0534, loss_cls: 0.1697, loss_bbox: 0.1766, acc: 94.0117, loss_meta_cls: 0.0029, meta_acc: 99.3333, loss: 0.4464
+2024-12-21 20:40:27,357 - mmfewshot - INFO - Iter [15900/18000]	lr: 5.000e-03, eta: 0:17:13, time: 0.438, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0409, loss_rpn_bbox: 0.0517, loss_cls: 0.1609, loss_bbox: 0.1789, acc: 94.0742, loss_meta_cls: 0.0032, meta_acc: 99.0667, loss: 0.4356
+2024-12-21 20:40:49,658 - mmfewshot - INFO - Iter [15950/18000]	lr: 5.000e-03, eta: 0:16:48, time: 0.446, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0422, loss_rpn_bbox: 0.0513, loss_cls: 0.1517, loss_bbox: 0.1641, acc: 94.3984, loss_meta_cls: 0.0035, meta_acc: 99.0667, loss: 0.4128
+2024-12-21 20:41:12,134 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 20:41:12,134 - mmfewshot - INFO - Iter [16000/18000]	lr: 5.000e-03, eta: 0:16:23, time: 0.449, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0388, loss_rpn_bbox: 0.0530, loss_cls: 0.1572, loss_bbox: 0.1693, acc: 94.1094, loss_meta_cls: 0.0025, meta_acc: 99.3333, loss: 0.4208
+2024-12-21 20:41:33,965 - mmfewshot - INFO - Iter [16050/18000]	lr: 5.000e-04, eta: 0:15:59, time: 0.437, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0416, loss_rpn_bbox: 0.0501, loss_cls: 0.1630, loss_bbox: 0.1657, acc: 93.9531, loss_meta_cls: 0.0023, meta_acc: 99.7333, loss: 0.4227
+2024-12-21 20:41:56,253 - mmfewshot - INFO - Iter [16100/18000]	lr: 5.000e-04, eta: 0:15:34, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0331, loss_rpn_bbox: 0.0536, loss_cls: 0.1443, loss_bbox: 0.1461, acc: 94.6328, loss_meta_cls: 0.0020, meta_acc: 99.4667, loss: 0.3790
+2024-12-21 20:42:18,164 - mmfewshot - INFO - Iter [16150/18000]	lr: 5.000e-04, eta: 0:15:09, time: 0.439, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0399, loss_rpn_bbox: 0.0525, loss_cls: 0.1615, loss_bbox: 0.1474, acc: 94.1445, loss_meta_cls: 0.0014, meta_acc: 100.0000, loss: 0.4027
+2024-12-21 20:42:40,619 - mmfewshot - INFO - Iter [16200/18000]	lr: 5.000e-04, eta: 0:14:44, time: 0.449, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0401, loss_rpn_bbox: 0.0523, loss_cls: 0.1546, loss_bbox: 0.1540, acc: 94.0859, loss_meta_cls: 0.0017, meta_acc: 99.7333, loss: 0.4027
+2024-12-21 20:43:03,359 - mmfewshot - INFO - Iter [16250/18000]	lr: 5.000e-04, eta: 0:14:19, time: 0.455, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0375, loss_rpn_bbox: 0.0493, loss_cls: 0.1469, loss_bbox: 0.1523, acc: 94.4648, loss_meta_cls: 0.0015, meta_acc: 99.7333, loss: 0.3876
+2024-12-21 20:43:25,516 - mmfewshot - INFO - Iter [16300/18000]	lr: 5.000e-04, eta: 0:13:54, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0379, loss_rpn_bbox: 0.0521, loss_cls: 0.1603, loss_bbox: 0.1529, acc: 93.9531, loss_meta_cls: 0.0013, meta_acc: 100.0000, loss: 0.4045
+2024-12-21 20:43:47,648 - mmfewshot - INFO - Iter [16350/18000]	lr: 5.000e-04, eta: 0:13:30, time: 0.443, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0283, loss_rpn_bbox: 0.0481, loss_cls: 0.1345, loss_bbox: 0.1358, acc: 95.0625, loss_meta_cls: 0.0011, meta_acc: 100.0000, loss: 0.3478
+2024-12-21 20:44:10,067 - mmfewshot - INFO - Iter [16400/18000]	lr: 5.000e-04, eta: 0:13:05, time: 0.448, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0368, loss_rpn_bbox: 0.0469, loss_cls: 0.1372, loss_bbox: 0.1480, acc: 94.7852, loss_meta_cls: 0.0014, meta_acc: 99.8667, loss: 0.3703
+2024-12-21 20:44:32,464 - mmfewshot - INFO - Iter [16450/18000]	lr: 5.000e-04, eta: 0:12:40, time: 0.448, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0379, loss_rpn_bbox: 0.0459, loss_cls: 0.1459, loss_bbox: 0.1458, acc: 94.5312, loss_meta_cls: 0.0015, meta_acc: 99.7333, loss: 0.3770
+2024-12-21 20:44:54,841 - mmfewshot - INFO - Iter [16500/18000]	lr: 5.000e-04, eta: 0:12:15, time: 0.447, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0308, loss_rpn_bbox: 0.0432, loss_cls: 0.1415, loss_bbox: 0.1383, acc: 94.7852, loss_meta_cls: 0.0013, meta_acc: 99.8667, loss: 0.3551
+2024-12-21 20:45:17,059 - mmfewshot - INFO - Iter [16550/18000]	lr: 5.000e-04, eta: 0:11:51, time: 0.444, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0328, loss_rpn_bbox: 0.0451, loss_cls: 0.1404, loss_bbox: 0.1434, acc: 94.7969, loss_meta_cls: 0.0017, meta_acc: 99.7333, loss: 0.3635
+2024-12-21 20:45:39,258 - mmfewshot - INFO - Iter [16600/18000]	lr: 5.000e-04, eta: 0:11:26, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0335, loss_rpn_bbox: 0.0448, loss_cls: 0.1460, loss_bbox: 0.1430, acc: 94.4688, loss_meta_cls: 0.0017, meta_acc: 99.7333, loss: 0.3689
+2024-12-21 20:46:01,606 - mmfewshot - INFO - Iter [16650/18000]	lr: 5.000e-04, eta: 0:11:01, time: 0.447, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0331, loss_rpn_bbox: 0.0492, loss_cls: 0.1370, loss_bbox: 0.1378, acc: 94.8867, loss_meta_cls: 0.0011, meta_acc: 100.0000, loss: 0.3582
+2024-12-21 20:46:23,839 - mmfewshot - INFO - Iter [16700/18000]	lr: 5.000e-04, eta: 0:10:37, time: 0.445, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0297, loss_rpn_bbox: 0.0450, loss_cls: 0.1372, loss_bbox: 0.1302, acc: 94.8906, loss_meta_cls: 0.0013, meta_acc: 99.8667, loss: 0.3435
+2024-12-21 20:46:45,797 - mmfewshot - INFO - Iter [16750/18000]	lr: 5.000e-04, eta: 0:10:12, time: 0.439, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0415, loss_rpn_bbox: 0.0466, loss_cls: 0.1542, loss_bbox: 0.1429, acc: 94.4297, loss_meta_cls: 0.0011, meta_acc: 100.0000, loss: 0.3862
+2024-12-21 20:47:08,073 - mmfewshot - INFO - Iter [16800/18000]	lr: 5.000e-04, eta: 0:09:47, time: 0.445, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0298, loss_rpn_bbox: 0.0477, loss_cls: 0.1227, loss_bbox: 0.1234, acc: 95.3672, loss_meta_cls: 0.0011, meta_acc: 100.0000, loss: 0.3247
+2024-12-21 20:47:30,245 - mmfewshot - INFO - Iter [16850/18000]	lr: 5.000e-04, eta: 0:09:23, time: 0.443, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0365, loss_rpn_bbox: 0.0477, loss_cls: 0.1384, loss_bbox: 0.1450, acc: 94.9609, loss_meta_cls: 0.0016, meta_acc: 99.7333, loss: 0.3692
+2024-12-21 20:47:52,438 - mmfewshot - INFO - Iter [16900/18000]	lr: 5.000e-04, eta: 0:08:58, time: 0.444, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0317, loss_rpn_bbox: 0.0468, loss_cls: 0.1187, loss_bbox: 0.1288, acc: 95.4102, loss_meta_cls: 0.0011, meta_acc: 100.0000, loss: 0.3270
+2024-12-21 20:48:14,633 - mmfewshot - INFO - Iter [16950/18000]	lr: 5.000e-04, eta: 0:08:33, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0358, loss_rpn_bbox: 0.0520, loss_cls: 0.1380, loss_bbox: 0.1377, acc: 94.9336, loss_meta_cls: 0.0010, meta_acc: 100.0000, loss: 0.3646
+2024-12-21 20:48:36,685 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 20:48:36,686 - mmfewshot - INFO - Iter [17000/18000]	lr: 5.000e-04, eta: 0:08:09, time: 0.441, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0331, loss_rpn_bbox: 0.0450, loss_cls: 0.1269, loss_bbox: 0.1381, acc: 95.3438, loss_meta_cls: 0.0013, meta_acc: 99.8667, loss: 0.3444
+2024-12-21 20:48:58,745 - mmfewshot - INFO - Iter [17050/18000]	lr: 5.000e-04, eta: 0:07:44, time: 0.441, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0296, loss_rpn_bbox: 0.0466, loss_cls: 0.1297, loss_bbox: 0.1393, acc: 95.0469, loss_meta_cls: 0.0010, meta_acc: 100.0000, loss: 0.3463
+2024-12-21 20:49:21,314 - mmfewshot - INFO - Iter [17100/18000]	lr: 5.000e-04, eta: 0:07:20, time: 0.451, data_time: 0.039, memory: 9779, loss_rpn_cls: 0.0272, loss_rpn_bbox: 0.0433, loss_cls: 0.1302, loss_bbox: 0.1293, acc: 95.1562, loss_meta_cls: 0.0013, meta_acc: 99.8667, loss: 0.3312
+2024-12-21 20:49:43,519 - mmfewshot - INFO - Iter [17150/18000]	lr: 5.000e-04, eta: 0:06:55, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0333, loss_rpn_bbox: 0.0486, loss_cls: 0.1256, loss_bbox: 0.1313, acc: 95.2500, loss_meta_cls: 0.0010, meta_acc: 100.0000, loss: 0.3399
+2024-12-21 20:50:05,287 - mmfewshot - INFO - Iter [17200/18000]	lr: 5.000e-04, eta: 0:06:30, time: 0.435, data_time: 0.035, memory: 9779, loss_rpn_cls: 0.0296, loss_rpn_bbox: 0.0493, loss_cls: 0.1319, loss_bbox: 0.1325, acc: 95.2656, loss_meta_cls: 0.0011, meta_acc: 100.0000, loss: 0.3444
+2024-12-21 20:50:26,978 - mmfewshot - INFO - Iter [17250/18000]	lr: 5.000e-04, eta: 0:06:06, time: 0.434, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0320, loss_rpn_bbox: 0.0436, loss_cls: 0.1261, loss_bbox: 0.1242, acc: 95.4023, loss_meta_cls: 0.0012, meta_acc: 99.8667, loss: 0.3272
+2024-12-21 20:50:48,765 - mmfewshot - INFO - Iter [17300/18000]	lr: 5.000e-04, eta: 0:05:41, time: 0.436, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0334, loss_rpn_bbox: 0.0441, loss_cls: 0.1262, loss_bbox: 0.1289, acc: 95.3320, loss_meta_cls: 0.0013, meta_acc: 99.8667, loss: 0.3338
+2024-12-21 20:51:10,544 - mmfewshot - INFO - Iter [17350/18000]	lr: 5.000e-04, eta: 0:05:17, time: 0.436, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0350, loss_rpn_bbox: 0.0464, loss_cls: 0.1477, loss_bbox: 0.1443, acc: 94.5117, loss_meta_cls: 0.0012, meta_acc: 99.8667, loss: 0.3746
+2024-12-21 20:51:32,626 - mmfewshot - INFO - Iter [17400/18000]	lr: 5.000e-04, eta: 0:04:52, time: 0.441, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0300, loss_rpn_bbox: 0.0394, loss_cls: 0.1408, loss_bbox: 0.1405, acc: 94.8008, loss_meta_cls: 0.0014, meta_acc: 99.8667, loss: 0.3521
+2024-12-21 20:51:54,289 - mmfewshot - INFO - Iter [17450/18000]	lr: 5.000e-04, eta: 0:04:28, time: 0.434, data_time: 0.036, memory: 9779, loss_rpn_cls: 0.0310, loss_rpn_bbox: 0.0466, loss_cls: 0.1337, loss_bbox: 0.1412, acc: 95.0781, loss_meta_cls: 0.0010, meta_acc: 100.0000, loss: 0.3535
+2024-12-21 20:52:16,220 - mmfewshot - INFO - Iter [17500/18000]	lr: 5.000e-04, eta: 0:04:03, time: 0.438, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0337, loss_rpn_bbox: 0.0437, loss_cls: 0.1213, loss_bbox: 0.1404, acc: 95.3281, loss_meta_cls: 0.0010, meta_acc: 100.0000, loss: 0.3401
+2024-12-21 20:52:38,422 - mmfewshot - INFO - Iter [17550/18000]	lr: 5.000e-04, eta: 0:03:39, time: 0.444, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0318, loss_rpn_bbox: 0.0485, loss_cls: 0.1224, loss_bbox: 0.1212, acc: 95.4062, loss_meta_cls: 0.0014, meta_acc: 99.7333, loss: 0.3253
+2024-12-21 20:53:00,696 - mmfewshot - INFO - Iter [17600/18000]	lr: 5.000e-04, eta: 0:03:15, time: 0.445, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0338, loss_rpn_bbox: 0.0500, loss_cls: 0.1388, loss_bbox: 0.1433, acc: 94.7930, loss_meta_cls: 0.0014, meta_acc: 99.8667, loss: 0.3674
+2024-12-21 20:53:22,578 - mmfewshot - INFO - Iter [17650/18000]	lr: 5.000e-04, eta: 0:02:50, time: 0.438, data_time: 0.035, memory: 9779, loss_rpn_cls: 0.0308, loss_rpn_bbox: 0.0457, loss_cls: 0.1315, loss_bbox: 0.1430, acc: 94.9023, loss_meta_cls: 0.0010, meta_acc: 100.0000, loss: 0.3519
+2024-12-21 20:53:44,762 - mmfewshot - INFO - Iter [17700/18000]	lr: 5.000e-04, eta: 0:02:26, time: 0.443, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0345, loss_rpn_bbox: 0.0523, loss_cls: 0.1478, loss_bbox: 0.1512, acc: 94.5781, loss_meta_cls: 0.0012, meta_acc: 99.8667, loss: 0.3869
+2024-12-21 20:54:06,693 - mmfewshot - INFO - Iter [17750/18000]	lr: 5.000e-04, eta: 0:02:01, time: 0.439, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0328, loss_rpn_bbox: 0.0523, loss_cls: 0.1417, loss_bbox: 0.1420, acc: 94.6641, loss_meta_cls: 0.0021, meta_acc: 99.6000, loss: 0.3710
+2024-12-21 20:54:28,900 - mmfewshot - INFO - Iter [17800/18000]	lr: 5.000e-04, eta: 0:01:37, time: 0.444, data_time: 0.037, memory: 9779, loss_rpn_cls: 0.0312, loss_rpn_bbox: 0.0458, loss_cls: 0.1275, loss_bbox: 0.1351, acc: 95.2461, loss_meta_cls: 0.0010, meta_acc: 100.0000, loss: 0.3405
+2024-12-21 20:54:51,218 - mmfewshot - INFO - Iter [17850/18000]	lr: 5.000e-04, eta: 0:01:13, time: 0.447, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0349, loss_rpn_bbox: 0.0483, loss_cls: 0.1356, loss_bbox: 0.1384, acc: 94.9688, loss_meta_cls: 0.0010, meta_acc: 100.0000, loss: 0.3583
+2024-12-21 20:55:13,620 - mmfewshot - INFO - Iter [17900/18000]	lr: 5.000e-04, eta: 0:00:48, time: 0.448, data_time: 0.040, memory: 9779, loss_rpn_cls: 0.0325, loss_rpn_bbox: 0.0473, loss_cls: 0.1450, loss_bbox: 0.1498, acc: 94.6328, loss_meta_cls: 0.0011, meta_acc: 99.8667, loss: 0.3757
+2024-12-21 20:55:35,610 - mmfewshot - INFO - Iter [17950/18000]	lr: 5.000e-04, eta: 0:00:24, time: 0.440, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0347, loss_rpn_bbox: 0.0497, loss_cls: 0.1180, loss_bbox: 0.1285, acc: 95.6562, loss_meta_cls: 0.0013, meta_acc: 99.8667, loss: 0.3322
+2024-12-21 20:55:57,578 - mmfewshot - INFO - Saving checkpoint at 18000 iterations
+2024-12-21 20:55:59,354 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 20:55:59,354 - mmfewshot - INFO - Iter [18000/18000]	lr: 5.000e-04, eta: 0:00:00, time: 0.476, data_time: 0.038, memory: 9779, loss_rpn_cls: 0.0282, loss_rpn_bbox: 0.0442, loss_cls: 0.1222, loss_bbox: 0.1323, acc: 95.3086, loss_meta_cls: 0.0010, meta_acc: 100.0000, loss: 0.3279
+2024-12-21 21:02:43,261 - mmfewshot - INFO - 
++-------------+------+-------+--------+-------+
+| class       | gts  | dets  | recall | ap    |
++-------------+------+-------+--------+-------+
+| aeroplane   | 285  | 3475  | 0.902  | 0.775 |
+| bicycle     | 337  | 1984  | 0.920  | 0.814 |
+| boat        | 263  | 5970  | 0.913  | 0.657 |
+| bottle      | 469  | 3609  | 0.846  | 0.659 |
+| car         | 1201 | 9744  | 0.957  | 0.864 |
+| cat         | 358  | 1644  | 0.950  | 0.848 |
+| chair       | 756  | 12798 | 0.865  | 0.556 |
+| diningtable | 206  | 3096  | 0.888  | 0.676 |
+| dog         | 489  | 2385  | 0.957  | 0.841 |
+| horse       | 348  | 1961  | 0.954  | 0.822 |
+| person      | 4528 | 14786 | 0.905  | 0.819 |
+| pottedplant | 480  | 3184  | 0.750  | 0.480 |
+| sheep       | 242  | 2997  | 0.909  | 0.720 |
+| train       | 282  | 2499  | 0.933  | 0.801 |
+| tvmonitor   | 308  | 2539  | 0.929  | 0.791 |
++-------------+------+-------+--------+-------+
+| mAP         |      |       |        | 0.742 |
++-------------+------+-------+--------+-------+
+2024-12-21 21:02:43,300 - mmfewshot - INFO - Exp name: meta-rcnn_r101_c4_8xb4_voc-split1_base-training.py
+2024-12-21 21:02:43,301 - mmfewshot - INFO - Iter(val) [4952]	AP50: 0.7420, mAP: 0.7415
