@@ -92,7 +92,14 @@ mmfewshot
 │   │   └── Annotations/
 └── ...
 
+##📸 Demo
 
+We provide two example inputs and their corresponding detection results in the test/ folder.
+If you want to test this demo, please refer to this bash command. It will generate visual results in the "work_show/results/" directory.
+```bash
+python tools/detection/test.py configs/detection/meta_rcnn/nwpu/split1/meta-rcnn_r101_c4_8xb4_DIOR-split1_10shot-fine-tuning.py work_dirs/meta-rcnn_r101_c4_8xb4_nwpu-split1_10shot-fine-tuning/best_AP50_iter_1700.pth \ 
+ --eval mAP --show-dir work_show/results --out results.pkl --gpu-id 0
+```
 ## 🚀 train
 
 base train
