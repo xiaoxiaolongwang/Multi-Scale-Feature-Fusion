@@ -75,14 +75,21 @@ After extraction, navigate to the `mmfewshot` directory and add the files `ADFN.
 Please download the required datasets (e.g., NWPU VHR-10.v2, DIOR) and place them under the `data` directory as follows:
 
 ```text
-project_root/
+mmfewshot
+├── mmfewshot
+├── tools
+├── configs
 ├── data/
-│   ├── NWPU_VHR10.v2/
+│   ├── NWPU/
 │   │   ├── JPEGImages/
+│   │   ├── ImageSets/
+│   │   ├── seed1/
 │   │   └── Annotations/
 │   └── DIOR/
-│       ├── JPEGImages/
-│       └── Annotations/
+│   │   ├── JPEGImages/
+│   │   ├── ImageSets/
+│   │   ├── seed1/
+│   │   └── Annotations/
 └── ...
 
 
