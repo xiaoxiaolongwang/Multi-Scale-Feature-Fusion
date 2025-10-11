@@ -73,20 +73,35 @@ After extraction, navigate to the `mmfewshot` directory and add the files `ADFN.
 ## 📂 Dataset Placement
 
 Please download the required datasets (e.g., NWPU VHR-10.v2, DIOR) and place them under the `data` directory as follows:
+
 mmfewshot
+
 ├── mmfewshot
+
 ├── tools
+
 ├── configs
+
 ├── data
+
 │   ├── VOCdevkit
+
 │   │   ├── VOC2007
+
 │   │   ├── VOC2012
+
 │   ├── few_shot_ann
+
 │   │   ├── voc
+
 │   │   │   ├── benchmark_1shot
+
 │   │   │   ├── benchmark_2shot
+
 │   │   │   ├── benchmark_3shot
+
 │   │   │   ├── benchmark_5shot
+
 │   │   │   ├── benchmark_10shot
 
 ## 🚀 train
