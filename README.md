@@ -91,7 +91,7 @@ mmfewshot
 │   │   ├── seed1/
 │   │   └── Annotations/
 └── ...
-
+```
 ##📸 Demo
 
 We provide two example inputs and their corresponding detection results in the test/ folder.
